@@ -6,7 +6,6 @@ import openpyxl
 # import joblib
 
 import pickle
-import requests
 from keras.models import model_from_json
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
@@ -97,56 +96,33 @@ else:
     st.write(input_data_KNEF)
 
 
-# # загрузка базовой модели для распознавания коллекторов
-# json_file = open('venv/Models/js_model.json', 'r')
-# loaded_model_json = json_file.read()
-# json_file.close()
-# loaded_model = model_from_json(loaded_model_json)
-# loaded_model.load_weights('venv/Models/weights.h5')
-# print('Loaded model from disk')
+json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
+loaded_model_json_collectors = json_file_collectors.read()
+json_file_collectors.close()
+loaded_model_collectors = model_from_json(loaded_model_json_collectors)
+loaded_model_collectors.load_weights('Models/COLLECTORS/Collectors_base_model.h5')
+print('Loaded model KNEF from disk')
 
 
-# loaded_model_collectors = pickle.load(open('venv/Models/COLLECTORS/drivemodel_RF_Collectors_model.sav', 'rb'))
-
-
-url_collectors = 'https://disk.yandex.ru/d/YHsDyy5f5dyxuw'
-file_collectors = requests.get(url_collectors)
-
-
-url_KNEF_model = 'https://disk.yandex.ru/d/Z2dff0Ga0Z-T2w'
-file_KNEF_model = requests.get(url_KNEF_model)
-
-url_KNEF_weights = 'https://disk.yandex.ru/d/fnXKBVh1CuN7yQ'
-file_KNEF_weights = requests.get(url_KNEF_weights)
-
-url_KPEF_model = 'https://disk.yandex.ru/d/4x-g44cBVuMBcQ'
-file_KPEF_model = requests.get(url_KPEF_model)
-
-url_KPEF_weights = 'https://disk.yandex.ru/d/ndQX0CNiwfO4uA'
-file_KPEF_weights = requests.get(url_KPEF_weights)
-
-
-with open(file_collectors, 'rb') as file:
-    loaded_model_collectors = pickle.load(file)
-
-json_file_KNEF = open(file_KNEF_model, 'r')
+json_file_KNEF = open('Models/KNEF/model_ilro_KNEF_model.json', 'r')
 loaded_model_json_KNEF = json_file_KNEF.read()
 json_file_KNEF.close()
 loaded_model_KNEF = model_from_json(loaded_model_json_KNEF)
-loaded_model_KNEF.load_weights(file_KNEF_weights)
+loaded_model_KNEF.load_weights('Models/KNEF/model_ilro_KNEF_weights.h5')
 print('Loaded model KNEF from disk')
 
-json_file_KPEF = open(file_KPEF_model, 'r')
+json_file_KPEF = open('Models/KPEF/KPEF_baseline_model.json', 'r')
 loaded_model_json_KPEF = json_file_KPEF.read()
 json_file_KPEF.close()
 loaded_model_KPEF = model_from_json(loaded_model_json_KPEF)
-loaded_model_KPEF.load_weights(file_KPEF_weights)
+loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
 print('Loaded model KNEF from disk')
 
 result = st.button('Классифицировать')
 if result:
     st.write('Результат классификации')
     if uploaded_file is not None:
+
 
         # # предсказание коллектора с использованием базовой модели
         # preds_collector = loaded_model.predict(predict_collectors)
@@ -195,4 +171,3 @@ if result:
 
         st.write(preds_KNEF)
         st.write(f'Коллектор: {out_collectors[0][0]}. KNEF: {preds_KNEF[0]}. KPEF: {preds_KPEF[0]}')
-
