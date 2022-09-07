@@ -296,3 +296,6 @@ if result:
         out_all['KPEF'] = out_fadeev_KPEF
         # out_all = pd.DataFrame([predict_KNEF, out_collectors, out_novikov_KNEF, out_fadeev_KPEF])
     st.write(out_all)
+
+    out_csv = out_all.to_csv()
+    download_file = st.download_button('Сохранить', data=out_csv)
