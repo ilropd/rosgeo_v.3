@@ -274,8 +274,10 @@ if result:
 
             out_collectors = pd.DataFrame(collectors, columns=['Коллектор'])
 
+        return out_collectors
+
     out_collectors = out_cols()
-    
+
     if knef_radio:
         out_novikov_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
         # st.write(out_novikov_KNEF)
