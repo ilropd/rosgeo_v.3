@@ -5,7 +5,6 @@ import requests
 import urllib.request
 import tempfile
 import shutil
-import tqdm
 import pickle
 from keras.models import model_from_json
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
