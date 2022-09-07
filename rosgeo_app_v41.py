@@ -254,25 +254,28 @@ st.write('---')
 if result:
     st.subheader('Результат классификации')
 
-    if soldatov_cb and not baseline_cb:
-        out_soldatov_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-        st.write(out_soldatov_collectors)
-    elif baseline_cb and not soldatov_cb:
-        out_baseline_collectors = preds_argmax_collectors(model=loaded_model_collectors, x_test=predict_collectors)
-        st.write(out_baseline_collectors)
-    elif soldatov_cb and baseline_cb:
-        collectors = []
-        out_soldatov_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-        out_baseline_collectors = preds_argmax_collectors(model=loaded_model_collectors, x_test=predict_collectors)
+    def out_cols():
+        if soldatov_cb and not baseline_cb:
+            out_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+            # st.write(out_soldatov_collectors)
+        elif baseline_cb and not soldatov_cb:
+            out_collectors = preds_argmax_collectors(model=loaded_model_collectors, x_test=predict_collectors)
+            # st.write(out_baseline_collectors)
+        elif soldatov_cb and baseline_cb:
+            collectors = []
+            out_soldatov_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+            out_baseline_collectors = preds_argmax_collectors(model=loaded_model_collectors, x_test=predict_collectors)
 
-        for i in range(len(out_soldatov_collectors)):
-            if out_soldatov_collectors[0][i] == out_baseline_collectors[0][i]:
-                collectors.append(out_soldatov_collectors[0][i])
-            else:
-                collectors.append(out_soldatov_collectors[0][i])
+            for i in range(len(out_soldatov_collectors)):
+                if out_soldatov_collectors[0][i] == out_baseline_collectors[0][i]:
+                    collectors.append(out_soldatov_collectors[0][i])
+                else:
+                    collectors.append(out_soldatov_collectors[0][i])
 
-        out_collectors = pd.DataFrame(collectors, columns=['Коллектор'])
+            out_collectors = pd.DataFrame(collectors, columns=['Коллектор'])
 
+    out_collectors = out_cols()
+    
     if knef_radio:
         out_novikov_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
         # st.write(out_novikov_KNEF)
