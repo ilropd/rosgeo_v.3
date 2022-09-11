@@ -20,7 +20,7 @@ st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРЕДСКАЗАНИЯ Г�
 st.sidebar.subheader('Предсказание типа коллектора')
 # bagurin_cb = st.sidebar.checkbox('Багурин М.')
 # grigorevckiy_cb = st.sidebar.checkbox('Григоревский К.')
-baseline_cb = st.sidebar.checkbox('Базовая модель')
+bagurin_cb = st.sidebar.checkbox('Багурин М.')
 soldatov_cb = st.sidebar.checkbox('Солдатов А.', value=True)
 st.sidebar.write('---')
 
@@ -149,6 +149,14 @@ def load_models():
         loaded_model_soldatov_collectors = pickle.load(f)
 
 
+    # модель Максима Багурина
+    json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
+    loaded_model_json_collectors = json_file_collectors.read()
+    json_file_collectors.close()
+    loaded_model_bagurin_collectors = model_from_json(loaded_model_json_collectors)
+    loaded_model_bagurin_collectors.load_weights('Models/COLLECTORS/Collectors_base_model.h5')
+    print('Loaded model COLLECTORS from disk')
+
     # МОДЕЛИ РАСПОЗНАВАНИЯ KNEF
     # модель Алексея Новикова
     # with urllib.request.urlopen('http://ilro.ru/KNEF/Novikov/model_ilro_KNEF_model.json') as url_novikov_model:
@@ -169,12 +177,12 @@ def load_models():
     #     loaded_model_KNEF.load_weights(tmp_novikov_weights)
 
 
-    json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
-    loaded_model_json_collectors = json_file_collectors.read()
-    json_file_collectors.close()
-    loaded_model_collectors = model_from_json(loaded_model_json_collectors)
-    loaded_model_collectors.load_weights('Models/COLLECTORS/Collectors_base_model.h5')
-    print('Loaded model COLLECTORS from disk')
+    # json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
+    # loaded_model_json_collectors = json_file_collectors.read()
+    # json_file_collectors.close()
+    # loaded_model_collectors = model_from_json(loaded_model_json_collectors)
+    # loaded_model_collectors.load_weights('Models/COLLECTORS/Collectors_base_model.h5')
+    # print('Loaded model COLLECTORS from disk')
 
 
     json_file_KNEF = open('Models/KNEF/model_ilro_KNEF_model.json', 'r')
@@ -191,9 +199,9 @@ def load_models():
     loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
     print('Loaded model KPEF from disk')
 
-    return loaded_model_soldatov_collectors, loaded_model_collectors, loaded_model_KNEF, loaded_model_KPEF
+    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF
 
-loaded_model_soldatov_collectors, loaded_model_collectors, loaded_model_KNEF, loaded_model_KPEF = load_models()
+loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -255,19 +263,19 @@ if result:
     st.subheader('Результат классификации')
 
     def out_cols():
-        if soldatov_cb and not baseline_cb:
+        if soldatov_cb and not bagurin_cb:
             out_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
             # st.write(out_soldatov_collectors)
-        elif baseline_cb and not soldatov_cb:
-            out_collectors = preds_argmax_collectors(model=loaded_model_collectors, x_test=predict_collectors)
+        elif bagurin_cb and not soldatov_cb:
+            out_collectors = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
             # st.write(out_baseline_collectors)
-        elif soldatov_cb and baseline_cb:
+        elif soldatov_cb and bagurin_cb:
             collectors = []
             out_soldatov_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-            out_baseline_collectors = preds_argmax_collectors(model=loaded_model_collectors, x_test=predict_collectors)
+            out_bagurin_collectors = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
 
             for i in range(len(out_soldatov_collectors)):
-                if out_soldatov_collectors[0][i] == out_baseline_collectors[0][i]:
+                if out_soldatov_collectors[0][i] == out_bagurin_collectors[0][i]:
                     collectors.append(out_soldatov_collectors[0][i])
                 else:
                     collectors.append(out_soldatov_collectors[0][i])
@@ -288,7 +296,12 @@ if result:
 
 
     if uploaded_file is not None:
-        out_all = pd.concat([df, out_collectors, out_novikov_KNEF, out_fadeev_KPEF], axis=1)
+        # out_all = pd.concat([df, out_collectors, out_novikov_KNEF, out_fadeev_KPEF], axis=1)
+        out_all = pd.DataFrame(df)
+        out_all['Коллекторы'] = out_collectors
+        out_all['KNEF'] = out_novikov_KNEF
+        out_all['KPEF'] = out_fadeev_KPEF
+
     else:
         out_all = pd.DataFrame(predict_KNEF)
         out_all['Коллекторы'] = out_collectors
