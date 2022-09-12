@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import tensorflow
 import openpyxl
 import requests
@@ -8,16 +9,17 @@ import shutil
 import pickle
 from keras.models import model_from_json
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
 
 # делаем сайдбар с выбором моделей
-st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРЕДСКАЗАНИЯ ГЕОДАННЫХ')
+st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
 
 # выбор моделей для предсказания коллекторов делаем чекбоксами, так как будет реализована логика предсказания коллектора
 # несколькими моделями, а затем выбор наиблее часто предсказанного как верного
-st.sidebar.subheader('Предсказание типа коллектора')
+st.sidebar.subheader('Прогнозирование типа коллектора')
 # bagurin_cb = st.sidebar.checkbox('Багурин М.')
 # grigorevckiy_cb = st.sidebar.checkbox('Григоревский К.')
 bagurin_cb = st.sidebar.checkbox('Багурин М.')
@@ -26,25 +28,25 @@ st.sidebar.write('---')
 
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
 # от предсказания типа коллектора
-st.sidebar.subheader('Предсказание KNEF')
+st.sidebar.subheader('Прогнозирование KNEF')
 knef_radio = st.sidebar.checkbox('Новиков А. (ilro)', value=True)
 # knef_radio = st.sidebar.radio('Модели KNEF', ('Новиков А. (ilro)'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
 # от предсказания типа коллектора
-st.sidebar.subheader('Предсказание KPEF')
-kpef_radio = st.sidebar.checkbox('Фадеев Ю.', value=True)
-# kpef_radio = st.sidebar.radio('Модели KPEF', ('Фадеев Ю.'))
+st.sidebar.subheader('Прогнозирование KPEF')
+# kpef_radio = st.sidebar.checkbox('Фадеев Ю.', 'Шахлин В.', value=True)
+kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('Фадеев Ю.', 'Шахлин В.'))
 
 # основной блок с выводом информации
-st.title('ПРЕДСКАЗАНИЕ ГЕОДАННЫХ')
+st.title('ПРОГНОЗИРОВАНИЕ ГЕОДАННЫХ')
 st.write('---')
 
 st.header('Ввод данных для обработки')
 
 # вызываем блок для загрузки файла
-uploaded_file = st.file_uploader(label='Выберите файл в формате xls для обработки')
+uploaded_file = st.file_uploader(label='Выберите файл в формате XLS или CSV для обработки', )
 
 # используем разное количество заголовков колонок, так как какие-то модели работают с 8 столбцами, какие-то с 9-10
 cols_collectors = ['GGKP_korr', 'GK_korr', 'PE_korr', 'DS_korr', 'DTP_korr', 'Wi_korr', 'BK_korr', 'BMK_korr']
@@ -54,14 +56,20 @@ cols_KNEF = ['ГЛУБИНА', 'GGKP_korr', 'GK_korr', 'PE_korr', 'DS_korr', 'DT
 if uploaded_file is not None:
         st.write('*Файл загружен успешно*')
 
-        df = pd.read_excel(uploaded_file, engine='openpyxl', header=1)
+        if 'csv' in uploaded_file.name:
+            df = pd.read_csv(uploaded_file, sep=',', decimal=',', header=0)
+            df = df.dropna(axis='index', how='any')
 
-        df = df.dropna(axis='index', how='any')
-        df = df.drop([0])
+        else:
+            df = pd.read_excel(uploaded_file, engine='openpyxl', header=1)
+            df = df.dropna(axis='index', how='any')
+            df = df.drop([0])
+
         df.reset_index(drop=True, inplace=True)
+
         for col in df.columns:
             if col not in cols_KNEF:
-                df.pop(col)
+                    df.pop(col)
         df = df.reindex(columns=cols_KNEF)
 
         def get_x_data(dataframe, cols_collectors=cols_collectors, cols_KNEF=cols_KNEF):
@@ -145,9 +153,8 @@ def load_models():
         with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov:
             shutil.copyfileobj(url_soldatov, tmp_soldatov)
 
-    with open(tmp_soldatov.name, 'rb') as f:
-        loaded_model_soldatov_collectors = pickle.load(f)
-
+    with open(tmp_soldatov.name, 'rb') as f_soldatov:
+        loaded_model_soldatov_collectors = pickle.load(f_soldatov)
 
     # модель Максима Багурина
     json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
@@ -192,6 +199,16 @@ def load_models():
     loaded_model_KNEF.load_weights('Models/KNEF/model_ilro_KNEF_weights.h5')
     print('Loaded model KNEF from disk')
 
+    # МОДЕЛИ РАСПОЗНАВАНИЯ KPEF
+    # модель Виталия Шахлина
+    with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/decisiontree_shakhlin-KPEF_weights.pkl') as url_shakhlin:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_shakhlin:
+            shutil.copyfileobj(url_shakhlin, tmp_shakhlin)
+
+    with open(tmp_shakhlin.name, 'rb') as f_shakhlin:
+        loaded_model_shakhlin_KPEF = pickle.load(f_shakhlin)
+
+    # модель Юрия Фдеева
     json_file_KPEF = open('Models/KPEF/KPEF_baseline_model.json', 'r')
     loaded_model_json_KPEF = json_file_KPEF.read()
     json_file_KPEF.close()
@@ -199,9 +216,9 @@ def load_models():
     loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
     print('Loaded model KPEF from disk')
 
-    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF
+    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF, loaded_model_shakhlin_KPEF
 
-loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF = load_models()
+loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -217,7 +234,6 @@ def preds_argmax_collectors(model='', x_test=''):
         preds_collectors = model.predict(x_test)
         pred_args_collector = np.argmax(preds_collectors, axis=1)
         out_collectors = args_to_types(pred_args_collector)
-        # out_collectors = f'Коллектор: {out_collectors[0][0]}'
         out_collectors = out_collectors[0][0]
 
     return out_collectors
@@ -290,9 +306,11 @@ if result:
         out_novikov_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
         # st.write(out_novikov_KNEF)
 
-    if kpef_radio:
-        out_fadeev_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
+    if kpef_radio == 'Фадеев Ю.':
+        out_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
         # st.write(out_fadeev_KPEF)
+    elif kpef_radio == 'Шахлин В.':
+        out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
 
 
     if uploaded_file is not None:
@@ -300,13 +318,13 @@ if result:
         out_all = pd.DataFrame(df)
         out_all['Коллекторы'] = out_collectors
         out_all['KNEF'] = out_novikov_KNEF
-        out_all['KPEF'] = out_fadeev_KPEF
+        out_all['KPEF'] = out_KPEF
 
     else:
         out_all = pd.DataFrame(predict_KNEF)
         out_all['Коллекторы'] = out_collectors
         out_all['KNEF'] = out_novikov_KNEF
-        out_all['KPEF'] = out_fadeev_KPEF
+        out_all['KPEF'] = out_KPEF
         # out_all = pd.DataFrame([predict_KNEF, out_collectors, out_novikov_KNEF, out_fadeev_KPEF])
     st.write(out_all)
 
