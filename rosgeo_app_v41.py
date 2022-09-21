@@ -9,10 +9,41 @@ import shutil
 import pickle
 from keras.models import model_from_json
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from pathlib import Path
+
+import io
+from io import BytesIO
 
 import pandas as pd
 import numpy as np
+
+
+with open('style.css') as f_style:
+    st.markdown(f'<style>{f_style.read()}</style>', unsafe_allow_html=True)
+
+# components.html(f"""
+# <script language="javascript">
+#
+# button_text = parent.document.getElementByXpath('//*[@id="root"]/div[1]/div[1]/div/div/div/section[2]/div/div[1]/div/div[6]/div/section/button');
+# button_text.name = 'Hide';
+# # const document = window.parent.document
+# # document.querySelector("h1").style.color = "red";
+# # document.querySelector('css-1cpxqw2.edgvbvh9').innerHTML = 'Hide';
+# # document.querySelector('css-1cpxqw2.edgvbvh9').innerText = 'Hide';
+# # document.querySelector('css-1cpxqw2.edgvbvh9').textContent = 'Hide';
+# </script>
+#     """, height=0, width=0)
+
+html_string = '''
+<script language="javascript">
+    const document = parent.document
+    but = document.querySelector('button.css-1cpxqw2.edgvbvh9');
+    but.textContent = 'jjj'
+  # console.log("Streamlit runs JavaScript");
+  # alert("Streamlit runs JavaScript");
+</script>
+'''
+components.html(html_string)  # JavaScript works
+
 
 # делаем сайдбар с выбором моделей
 st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
@@ -29,8 +60,8 @@ st.sidebar.write('---')
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
 # от предсказания типа коллектора
 st.sidebar.subheader('Прогнозирование KNEF')
-knef_radio = st.sidebar.checkbox('Новиков А. (ilro)', value=True)
-# knef_radio = st.sidebar.radio('Модели KNEF', ('Новиков А. (ilro)'))
+# knef_radio = st.sidebar.checkbox('Новиков А. (ilro)', value=True)
+knef_radio = st.sidebar.radio('Модели KNEF', ('Новиков А. (ilro)', 'Новиков А. (не выбирать!!!)'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -49,8 +80,8 @@ st.header('Ввод данных для обработки')
 uploaded_file = st.file_uploader(label='Выберите файл в формате XLS или CSV для обработки', )
 
 # используем разное количество заголовков колонок, так как какие-то модели работают с 8 столбцами, какие-то с 9-10
-cols_collectors = ['GGKP_korr', 'GK_korr', 'PE_korr', 'DS_korr', 'DTP_korr', 'Wi_korr', 'BK_korr', 'BMK_korr']
-cols_KNEF = ['ГЛУБИНА', 'GGKP_korr', 'GK_korr', 'PE_korr', 'DS_korr', 'DTP_korr', 'Wi_korr', 'BK_korr', 'BMK_korr']
+cols_collectors = ['GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK']
+cols_KNEF = ['ГЛУБИНА', 'GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK']
 
 # осуществляем предобработку данных, загруженных через файл
 if uploaded_file is not None:
@@ -67,10 +98,17 @@ if uploaded_file is not None:
 
         df.reset_index(drop=True, inplace=True)
 
+        for i in df.columns.values:
+            for j in cols_collectors:
+                if (j.lower() in i.lower()) and ('KPEF'.lower() not in i.lower()):
+                    df.rename(columns={i: j}, inplace=True)
+
         for col in df.columns:
             if col not in cols_KNEF:
                     df.pop(col)
+
         df = df.reindex(columns=cols_KNEF)
+        # st.write(df)
 
         def get_x_data(dataframe, cols_collectors=cols_collectors, cols_KNEF=cols_KNEF):
             get_x_collectors = dataframe[cols_collectors].values.astype(np.float32)
@@ -88,29 +126,29 @@ else:
         col1, col2, col3 = st.columns(3, gap='medium')
 
         with col1:
-            depth_korr = st.number_input('ГЛУБИНА')
-            ggkp_korr = st.number_input('GGKP_korr')
-            gk_korr = st.number_input('GK_korr')
+            depth = st.number_input('ГЛУБИНА')
+            ggkp = st.number_input('GGKP')
+            gk = st.number_input('GK')
 
         with col2:
-            pe_korr = st.number_input('PE_korr')
-            ds_korr = st.number_input('DS_korr')
-            dtp_korr = st.number_input('DTP_korr')
+            pe = st.number_input('PE')
+            ds = st.number_input('DS')
+            dtp = st.number_input('DTP')
 
         with col3:
-            wi_korr = st.number_input('Wi_korr')
-            bk_korr = st.number_input('BK_korr')
-            bmk_korr = st.number_input('BMK_korr')
+            wi = st.number_input('Wi')
+            bk = st.number_input('BK')
+            bmk = st.number_input('BMK')
 
-        data = {'ГЛУБИНА': depth_korr,
-                'GGKP_korr': ggkp_korr,
-                'GK_korr': gk_korr,
-                'PE_korr': pe_korr,
-                'DS_korr': ds_korr,
-                'DTP_korr': dtp_korr,
-                'Wi_korr': wi_korr,
-                'BK_korr': bk_korr,
-                'BMK_korr': bmk_korr
+        data = {'ГЛУБИНА': depth,
+                'GGKP': ggkp,
+                'GK': gk,
+                'PE': pe,
+                'DS': ds,
+                'DTP': dtp,
+                'Wi': wi,
+                'BK': bk,
+                'BMK': bmk
                 }
         user_prediction_data = pd.DataFrame(data, index=[0])
 
@@ -166,6 +204,16 @@ def load_models():
 
     # МОДЕЛИ РАСПОЗНАВАНИЯ KNEF
     # модель Алексея Новикова
+    json_file_Novikov_KNEF = open('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_model.json', 'r')
+    loaded_model_json_Novikov_KNEF = json_file_Novikov_KNEF.read()
+    json_file_Novikov_KNEF.close()
+    loaded_model_Novikov_KNEF = model_from_json(loaded_model_json_Novikov_KNEF)
+    loaded_model_Novikov_KNEF.load_weights('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_weights.h5')
+    print('Loaded model Novikov KNEF from disk')
+
+
+
+
     # with urllib.request.urlopen('http://ilro.ru/KNEF/Novikov/model_ilro_KNEF_model.json') as url_novikov_model:
     #     with tempfile.NamedTemporaryFile(delete=False) as tmp_novikov_model:
     #         shutil.copyfileobj(url_novikov_model, tmp_novikov_model)
@@ -216,9 +264,11 @@ def load_models():
     loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
     print('Loaded model KPEF from disk')
 
-    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF, loaded_model_shakhlin_KPEF
+    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, \
+           loaded_model_KPEF, loaded_model_shakhlin_KPEF
 
-loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
+loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, \
+loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -302,8 +352,10 @@ if result:
 
     out_collectors = out_cols()
 
-    if knef_radio:
-        out_novikov_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
+    if knef_radio == 'Новиков А. (не выбирать!!!)':
+        out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF)
+    elif knef_radio == 'Новиков А. (ilro)':
+        out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
         # st.write(out_novikov_KNEF)
 
     if kpef_radio == 'Фадеев Ю.':
@@ -312,21 +364,45 @@ if result:
     elif kpef_radio == 'Шахлин В.':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
 
-
     if uploaded_file is not None:
         # out_all = pd.concat([df, out_collectors, out_novikov_KNEF, out_fadeev_KPEF], axis=1)
         out_all = pd.DataFrame(df)
         out_all['Коллекторы'] = out_collectors
-        out_all['KNEF'] = out_novikov_KNEF
+        out_all['KNEF'] = out_KNEF
         out_all['KPEF'] = out_KPEF
 
     else:
         out_all = pd.DataFrame(predict_KNEF)
         out_all['Коллекторы'] = out_collectors
-        out_all['KNEF'] = out_novikov_KNEF
+        out_all['KNEF'] = out_KNEF
         out_all['KPEF'] = out_KPEF
         # out_all = pd.DataFrame([predict_KNEF, out_collectors, out_novikov_KNEF, out_fadeev_KPEF])
     st.write(out_all)
 
+    col_csv, col_excel, col_no1, col_no2 = st.columns(4, gap='small')
+
     out_csv = out_all.to_csv()
-    download_file = st.download_button('Сохранить', data=out_csv)
+    out_xls = pd.DataFrame(out_all)
+
+    def to_excel(df):
+        output = BytesIO()
+        writer = pd.ExcelWriter(output, engine='openpyxl')
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+        workbook = writer.book
+        # worksheet = writer.sheets['Sheet1']
+        # format1 = workbook.add_format({'num_format': '0.00'})
+        # worksheet.set_column('A:A', None, format1)
+        writer.save()
+        processed_data = output.getvalue()
+        return processed_data
+
+    df_xlsx = to_excel(out_xls)
+
+    with col_csv:
+        st.download_button(label='📥 Сохранить в CSV',
+                                data=out_csv,
+                                file_name= 'Rosgeology_prediction.txt')
+    with col_excel:
+        st.download_button(label='📥 Сохранить в Excel',
+                                data=df_xlsx ,
+                                file_name= 'Rosgeology_prediction.xlsx')
