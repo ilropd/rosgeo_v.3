@@ -33,7 +33,7 @@ st.sidebar.write('---')
 # от предсказания типа коллектора
 st.sidebar.subheader('Прогнозирование KNEF')
 # knef_radio = st.sidebar.checkbox('Новиков А. (ilro)', value=True)
-knef_radio = st.sidebar.radio('Модели KNEF', ('Новиков А. (ilro)', 'Новиков А. (не выбирать!!!)'))
+knef_radio = st.sidebar.radio('Модели KNEF', ('Новиков А. (ilro)', 'Новиков А.'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -280,7 +280,7 @@ def preds_KNEF(model='', x_test='', x_kpef=''):
 
     if len(x_test)>1:
 
-        if knef_radio == 'Новиков А. (не выбирать!!!)':
+        if knef_radio == 'Новиков А.':
             X_val_kpef = np.array(x_kpef).reshape(-1,1)
             xScaler = MinMaxScaler()
             xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
