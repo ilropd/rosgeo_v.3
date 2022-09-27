@@ -1,49 +1,18 @@
 import streamlit as st
-import streamlit.components.v1 as components
-import tensorflow
-import openpyxl
-import requests
+# import streamlit.components.v1 as components
+# import tensorflow
+# import openpyxl
+# import requests
 import urllib.request
 import tempfile
 import shutil
 import pickle
-from keras.models import model_from_json
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-
+from keras.models import model_from_json, load_model
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, normalize
 import io
 from io import BytesIO
-
 import pandas as pd
 import numpy as np
-
-
-with open('style.css') as f_style:
-    st.markdown(f'<style>{f_style.read()}</style>', unsafe_allow_html=True)
-
-# components.html(f"""
-# <script language="javascript">
-#
-# button_text = parent.document.getElementByXpath('//*[@id="root"]/div[1]/div[1]/div/div/div/section[2]/div/div[1]/div/div[6]/div/section/button');
-# button_text.name = 'Hide';
-# # const document = window.parent.document
-# # document.querySelector("h1").style.color = "red";
-# # document.querySelector('css-1cpxqw2.edgvbvh9').innerHTML = 'Hide';
-# # document.querySelector('css-1cpxqw2.edgvbvh9').innerText = 'Hide';
-# # document.querySelector('css-1cpxqw2.edgvbvh9').textContent = 'Hide';
-# </script>
-#     """, height=0, width=0)
-
-html_string = '''
-<script language="javascript">
-    const document = parent.document
-    but = document.querySelector('button.css-1cpxqw2.edgvbvh9');
-    but.textContent = 'jjj'
-  # console.log("Streamlit runs JavaScript");
-  # alert("Streamlit runs JavaScript");
-</script>
-'''
-components.html(html_string)  # JavaScript works
-
 
 # делаем сайдбар с выбором моделей
 st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
@@ -53,8 +22,11 @@ st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИ
 st.sidebar.subheader('Прогнозирование типа коллектора')
 # bagurin_cb = st.sidebar.checkbox('Багурин М.')
 # grigorevckiy_cb = st.sidebar.checkbox('Григоревский К.')
-bagurin_cb = st.sidebar.checkbox('Багурин М.')
-soldatov_cb = st.sidebar.checkbox('Солдатов А.', value=True)
+collectors_radio = st.sidebar.radio('Модели Коллекторов', ('Багурин М.', 'Каргальцев В.', 'Солдатов А.'))
+# bagurin_cb = st.sidebar.checkbox('Багурин М.')
+# kargaltsev_cb = st.sidebar.checkbox('Каргальцев В.')
+# kononov_cb = st.sidebar.checkbox('Кононов А.')
+# soldatov_cb = st.sidebar.checkbox('Солдатов А.', value=True)
 st.sidebar.write('---')
 
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -194,13 +166,29 @@ def load_models():
     with open(tmp_soldatov.name, 'rb') as f_soldatov:
         loaded_model_soldatov_collectors = pickle.load(f_soldatov)
 
+    # # модель Антона Кононова
+    # with urllib.request.urlopen('http://ilro.ru/Collectors/Kononov/hist_kononov_collectors_model.pkl') as url_kononov:
+    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_kononov:
+    #         shutil.copyfileobj(url_kononov, tmp_kononov)
+    #
+    # with open(tmp_kononov.name, 'rb') as f_kononov:
+    #     loaded_model_kononov_collectors = pickle.load(f_kononov)
+
     # модель Максима Багурина
-    json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
+    json_file_collectors = open('Models/COLLECTORS/Bagurin/bagurin_collectors_93_model.json', 'r')
     loaded_model_json_collectors = json_file_collectors.read()
     json_file_collectors.close()
     loaded_model_bagurin_collectors = model_from_json(loaded_model_json_collectors)
-    loaded_model_bagurin_collectors.load_weights('Models/COLLECTORS/Collectors_base_model.h5')
-    print('Loaded model COLLECTORS from disk')
+    loaded_model_bagurin_collectors.load_weights('Models/COLLECTORS/Bagurin/bagurin_collectors_93_weights.h5')
+    print('Loaded model Bagurin COLLECTORS from disk')
+
+    # модель Владислава Каргальцева
+    json_file_collectors = open('Models/COLLECTORS/Kargaltsev/rgmodel19_Kargaltsev_collectors.json', 'r')
+    loaded_model_json_collectors = json_file_collectors.read()
+    json_file_collectors.close()
+    loaded_model_kargaltsev_collectors = model_from_json(loaded_model_json_collectors)
+    loaded_model_kargaltsev_collectors.load_weights('Models/COLLECTORS/Kargaltsev/rgmodel19_Kargaltsev_collectors_weights.h5')
+    print('Loaded model Kargaltsev COLLECTORS from disk')
 
     # МОДЕЛИ РАСПОЗНАВАНИЯ KNEF
     # модель Алексея Новикова
@@ -210,8 +198,6 @@ def load_models():
     loaded_model_Novikov_KNEF = model_from_json(loaded_model_json_Novikov_KNEF)
     loaded_model_Novikov_KNEF.load_weights('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_weights.h5')
     print('Loaded model Novikov KNEF from disk')
-
-
 
 
     # with urllib.request.urlopen('http://ilro.ru/KNEF/Novikov/model_ilro_KNEF_model.json') as url_novikov_model:
@@ -264,11 +250,12 @@ def load_models():
     loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
     print('Loaded model KPEF from disk')
 
-    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, \
-           loaded_model_KPEF, loaded_model_shakhlin_KPEF
+    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
+           loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_shakhlin_KPEF
 
-loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, \
-loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
+loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
+loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -289,23 +276,53 @@ def preds_argmax_collectors(model='', x_test=''):
     return out_collectors
 
 # функция прогноза KNEF
-def preds_KNEF(model='', x_test=''):
+def preds_KNEF(model='', x_test='', x_kpef=''):
 
     if len(x_test)>1:
-        xScaler = MinMaxScaler()
-        xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
-        xTrSc1 = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
-        preds_KNEF = model.predict(xTrSc1[0:len(xTrSc1)])
-        preds_KNEF = np.round(preds_KNEF, 4)
-        out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
+
+        if knef_radio == 'Новиков А. (не выбирать!!!)':
+            X_val_kpef = np.array(x_kpef).reshape(-1,1)
+            xScaler = MinMaxScaler()
+            xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
+            xValSc = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
+            xValSc1 = xValSc[:, 0:5]
+            xValSc2 = xValSc[:, 5:8]
+            preds_KNEF = model.predict([xValSc1, xValSc2, X_val_kpef])
+            preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
+            # min_max = MinMaxScaler(feature_range=(preds_KNEF.min(), preds_KNEF.max()))
+            # preds_KNEF = min_max.fit_transform(preds_KNEF)
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF']).apply(lambda x: x*0.003/preds_KNEF.min())
+
+        else:
+            xScaler = MinMaxScaler()
+            xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
+            xTrSc1 = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
+            preds_KNEF = model.predict(xTrSc1)
+            preds_KNEF = np.round(preds_KNEF, 4)
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
 
     else:
-        xScaler = MinMaxScaler()
-        xScaler.fit(x_test)
-        xTrSc1 = xScaler.transform(x_test)
-        preds_KNEF = model.predict(xTrSc1[0:1])
-        out_KNEF = np.round(preds_KNEF, 4)
-        out_KNEF = out_KNEF[0]
+        if knef_radio == 'Новиков А. (не выбирать!!!)':
+            x_test = np.array(x_test)
+            X_val_kpef = np.array(x_kpef).reshape(-1,1)
+            xScaler = MinMaxScaler()
+            xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
+            xValSc = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
+            st.dataframe(xValSc)
+            xValSc1 = xValSc[:, 0:5]
+            xValSc2 = xValSc[:, 5:8]
+            preds_KNEF = model.predict([xValSc1[0:1], xValSc2[0:1], X_val_kpef[0:1]])
+            out_KNEF = np.round(preds_KNEF, 4)
+            out_KNEF = (out_KNEF[0]-0.5)/0.5
+            # out_KNEF = out_KNEF*1/min(out_KNEF)
+
+        else:
+            xScaler = MinMaxScaler()
+            xScaler.fit(x_test)
+            xTrSc1 = xScaler.transform(x_test)
+            preds_KNEF = model.predict(xTrSc1[0:1])
+            out_KNEF = np.round(preds_KNEF, 4)
+            out_KNEF = out_KNEF[0]
 
     return out_KNEF
 
@@ -313,11 +330,26 @@ def preds_KNEF(model='', x_test=''):
 def preds_KPEF(model='', x_test=''):
 
     if len(x_test)>1:
+        # if model == 'loaded_model_shakhlin_KPEF':
+        #     st.write('shhhhhh')
+        #     preds_KPEF = model.predict(x_test)
+        #     preds_KPEF = np.exp(preds_KPEF)
+        # else:
+        #     preds_KPEF = model.predict(x_test)
+        #     preds_KPEF = np.round(preds_KPEF, 4)
         preds_KPEF = model.predict(x_test)
         preds_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = pd.DataFrame(preds_KPEF, columns=['KPEF'])
 
     else:
+        # if model == 'loaded_model_shakhlin_KPEF':
+        #     st.write('shhhhhh')
+        #     preds_KPEF = model.predict(x_test)
+        #     preds_KPEF = np.exp(preds_KPEF)
+        #     out_KPEF = np.round(preds_KPEF, 4)
+        # else:
+        #     preds_KPEF = model.predict(x_test)
+        #     out_KPEF = np.round(preds_KPEF, 4)
         preds_KPEF = model.predict(x_test)
         out_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = out_KPEF[0]
@@ -329,40 +361,59 @@ if result:
     st.subheader('Результат классификации')
 
     def out_cols():
-        if soldatov_cb and not bagurin_cb:
-            out_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-            # st.write(out_soldatov_collectors)
-        elif bagurin_cb and not soldatov_cb:
-            out_collectors = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
-            # st.write(out_baseline_collectors)
-        elif soldatov_cb and bagurin_cb:
-            collectors = []
-            out_soldatov_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-            out_bagurin_collectors = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+        if knef_radio == 'Солдатов А.':
+            out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+        elif knef_radio == 'Багурин М.':
+            out_collector = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+        elif knef_radio == 'Каргальцев В.':
+            out_collector = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+        # elif knef_radio == 'Кононов А.':
+        #     out_collectors = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+        else:
+            out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
 
-            for i in range(len(out_soldatov_collectors)):
-                if out_soldatov_collectors[0][i] == out_bagurin_collectors[0][i]:
-                    collectors.append(out_soldatov_collectors[0][i])
-                else:
-                    collectors.append(out_soldatov_collectors[0][i])
+        return out_collector
+        # if soldatov_cb and not (bagurin_cb or kargaltsev_cb or kononov_cb):
+        #     out_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+        #     # st.write(out_soldatov_collectors)
+        # elif bagurin_cb and not (soldatov_cb or kargaltsev_cb or kononov_cb):
+        #     out_collectors = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+        #     # st.write(out_baseline_collectors)
+        # elif kargaltsev_cb and not (soldatov_cb or bagurin_cb or kononov_cb):
+        #     out_collectors = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+        # elif kononov_cb and not (soldatov_cb or bagurin_cb or kargaltsev_cb):
+        #     out_collectors = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+        # else:
+        #     out_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
 
-            out_collectors = pd.DataFrame(collectors, columns=['Коллектор'])
+        # elif soldatov_cb and (bagurin_cb or kargaltsev_cb):
+        #     collectors = []
+        #     out_soldatov_collectors = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+        #     out_bagurin_collectors = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+        #     out_kargaltsev_collectors = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+        #
+        #     for i in range(len(out_soldatov_collectors)):
+        #         if out_soldatov_collectors[0][i] == (out_bagurin_collectors[0][i] or out_kargaltsev_collectors[0][i]):
+        #             collectors.append(out_soldatov_collectors[0][i])
+        #         else:
+        #             collectors.append(out_soldatov_collectors[0][i])
 
-        return out_collectors
+            # out_collectors = pd.DataFrame(collectors, columns=['Коллектор'])
 
     out_collectors = out_cols()
 
-    if knef_radio == 'Новиков А. (не выбирать!!!)':
-        out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF)
-    elif knef_radio == 'Новиков А. (ilro)':
-        out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
-        # st.write(out_novikov_KNEF)
 
     if kpef_radio == 'Фадеев Ю.':
         out_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
         # st.write(out_fadeev_KPEF)
     elif kpef_radio == 'Шахлин В.':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
+
+    if knef_radio == 'Новиков А. (не выбирать!!!)':
+        out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF)
+    elif knef_radio == 'Новиков А. (ilro)':
+        out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
+        # st.write(out_novikov_KNEF)
 
     if uploaded_file is not None:
         # out_all = pd.concat([df, out_collectors, out_novikov_KNEF, out_fadeev_KPEF], axis=1)
