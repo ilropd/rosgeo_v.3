@@ -288,10 +288,12 @@ def preds_KNEF(model='', x_test='', x_kpef=''):
             xValSc1 = xValSc[:, 0:5]
             xValSc2 = xValSc[:, 5:8]
             preds_KNEF = model.predict([xValSc1, xValSc2, X_val_kpef])
-            preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
+            # preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
+            preds_KNEF = np.round(preds_KNEF, 4)
             # min_max = MinMaxScaler(feature_range=(preds_KNEF.min(), preds_KNEF.max()))
             # preds_KNEF = min_max.fit_transform(preds_KNEF)
-            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF']).apply(lambda x: x*0.003/preds_KNEF.min())
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
+                # .apply(lambda x: x*0.003/preds_KNEF.min())
 
         else:
             xScaler = MinMaxScaler()
@@ -302,7 +304,7 @@ def preds_KNEF(model='', x_test='', x_kpef=''):
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
 
     else:
-        if knef_radio == 'Новиков А. (не выбирать!!!)':
+        if knef_radio == 'Новиков А.':
             x_test = np.array(x_test)
             X_val_kpef = np.array(x_kpef).reshape(-1,1)
             xScaler = MinMaxScaler()
@@ -409,7 +411,7 @@ if result:
     elif kpef_radio == 'Шахлин В.':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
 
-    if knef_radio == 'Новиков А. (не выбирать!!!)':
+    if knef_radio == 'Новиков А.':
         out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF)
     elif knef_radio == 'Новиков А. (ilro)':
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
