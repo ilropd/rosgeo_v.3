@@ -22,7 +22,7 @@ st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИ
 st.sidebar.subheader('Прогнозирование типа коллектора')
 # bagurin_cb = st.sidebar.checkbox('Багурин М.')
 # grigorevckiy_cb = st.sidebar.checkbox('Григоревский К.')
-collectors_radio = st.sidebar.radio('Модели Коллекторов', ('Багурин М.', 'Каргальцев В.', 'Солдатов А.'))
+collectors_radio = st.sidebar.radio('Модели Коллекторов', ('Багурин М.', 'Каргальцев В.', 'Кононов А.', 'Солдатов А.'))
 # bagurin_cb = st.sidebar.checkbox('Багурин М.')
 # kargaltsev_cb = st.sidebar.checkbox('Каргальцев В.')
 # kononov_cb = st.sidebar.checkbox('Кононов А.')
@@ -166,13 +166,13 @@ def load_models():
     with open(tmp_soldatov.name, 'rb') as f_soldatov:
         loaded_model_soldatov_collectors = pickle.load(f_soldatov)
 
-    # # модель Антона Кононова
-    # with urllib.request.urlopen('http://ilro.ru/Collectors/Kononov/hist_kononov_collectors_model.pkl') as url_kononov:
-    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_kononov:
-    #         shutil.copyfileobj(url_kononov, tmp_kononov)
-    #
-    # with open(tmp_kononov.name, 'rb') as f_kononov:
-    #     loaded_model_kononov_collectors = pickle.load(f_kononov)
+    # модель Антона Кононова
+    with urllib.request.urlopen('http://ilro.ru/Collectors/Kononov/BaggingClassifier_RG_kononov_collectors_model.pkl') as url_kononov:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_kononov:
+            shutil.copyfileobj(url_kononov, tmp_kononov)
+
+    with open(tmp_kononov.name, 'rb') as f_kononov:
+        loaded_model_kononov_collectors = pickle.load(f_kononov)
 
     # модель Максима Багурина
     json_file_collectors = open('Models/COLLECTORS/Bagurin/bagurin_collectors_93_model.json', 'r')
@@ -251,11 +251,12 @@ def load_models():
     print('Loaded model KPEF from disk')
 
     return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-           loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
            loaded_model_shakhlin_KPEF
 
 loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -288,7 +289,7 @@ def preds_KNEF(model='', x_test='', x_kpef=''):
             xValSc1 = xValSc[:, 0:5]
             xValSc2 = xValSc[:, 5:8]
             preds_KNEF = model.predict([xValSc1, xValSc2, X_val_kpef])
-            # preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
+            preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
             preds_KNEF = np.round(preds_KNEF, 4)
             # min_max = MinMaxScaler(feature_range=(preds_KNEF.min(), preds_KNEF.max()))
             # preds_KNEF = min_max.fit_transform(preds_KNEF)
@@ -369,8 +370,8 @@ if result:
             out_collector = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
         elif knef_radio == 'Каргальцев В.':
             out_collector = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
-        # elif knef_radio == 'Кононов А.':
-        #     out_collectors = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+        elif knef_radio == 'Кононов А.':
+            out_collectors = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
         else:
             out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
 
