@@ -13,6 +13,10 @@ import io
 from io import BytesIO
 import pandas as pd
 import numpy as np
+import sklearn
+# from sklearn.ensemble import GradientBoostingRegressor
+# from sklearn.experimental import enable_hist_gradient_boosting
+# from sklearn.metrics import log_loss
 
 # делаем сайдбар с выбором моделей
 st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
@@ -33,7 +37,7 @@ st.sidebar.write('---')
 # от предсказания типа коллектора
 st.sidebar.subheader('Прогнозирование KNEF')
 # knef_radio = st.sidebar.checkbox('Новиков А. (ilro)', value=True)
-knef_radio = st.sidebar.radio('Модели KNEF', ('Новиков А. (ilro)', 'Новиков А.'))
+knef_radio = st.sidebar.radio('Модели KNEF', ('Мартынович С.', 'Новиков А. (ilro)', 'Новиков А.'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -191,6 +195,15 @@ def load_models():
     print('Loaded model Kargaltsev COLLECTORS from disk')
 
     # МОДЕЛИ РАСПОЗНАВАНИЯ KNEF
+
+    # модель Степана Мартыновича
+    json_file_KNEF = open('Models/KNEF/Martynovich/KNEF_final_Martynovich_model.json', 'r')
+    loaded_model_json_KNEF = json_file_KNEF.read()
+    json_file_KNEF.close()
+    loaded_model_Martynovich_KNEF = model_from_json(loaded_model_json_KNEF)
+    loaded_model_Martynovich_KNEF.load_weights('Models/KNEF/Martynovich/KNEF_final_Martynovich_weights.h5')
+    print('Loaded model KNEF Martynovich from disk')
+
     # модель Алексея Новикова
     json_file_Novikov_KNEF = open('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_model.json', 'r')
     loaded_model_json_Novikov_KNEF = json_file_Novikov_KNEF.read()
@@ -236,13 +249,15 @@ def load_models():
     # МОДЕЛИ РАСПОЗНАВАНИЯ KPEF
     # модель Виталия Шахлина
     with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/decisiontree_shakhlin-KPEF_weights.pkl') as url_shakhlin:
+    # with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/gradientboosting_shakhlin-KPEF_weights.pkl') as url_shakhlin:
+
         with tempfile.NamedTemporaryFile(delete=False) as tmp_shakhlin:
             shutil.copyfileobj(url_shakhlin, tmp_shakhlin)
 
     with open(tmp_shakhlin.name, 'rb') as f_shakhlin:
         loaded_model_shakhlin_KPEF = pickle.load(f_shakhlin)
 
-    # модель Юрия Фдеева
+    # модель Юрия Фадеева
     json_file_KPEF = open('Models/KPEF/KPEF_baseline_model.json', 'r')
     loaded_model_json_KPEF = json_file_KPEF.read()
     json_file_KPEF.close()
@@ -251,11 +266,11 @@ def load_models():
     print('Loaded model KPEF from disk')
 
     return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
            loaded_model_shakhlin_KPEF
 
 loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
 loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
@@ -277,24 +292,36 @@ def preds_argmax_collectors(model='', x_test=''):
     return out_collectors
 
 # функция прогноза KNEF
-def preds_KNEF(model='', x_test='', x_kpef=''):
+def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
 
     if len(x_test)>1:
 
         if knef_radio == 'Новиков А.':
-            X_val_kpef = np.array(x_kpef).reshape(-1,1)
+            X_val_knef = np.array(x_kpef).reshape(-1,1)
             xScaler = MinMaxScaler()
             xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
             xValSc = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
             xValSc1 = xValSc[:, 0:5]
             xValSc2 = xValSc[:, 5:8]
-            preds_KNEF = model.predict([xValSc1, xValSc2, X_val_kpef])
+            preds_KNEF = model.predict([xValSc1, xValSc2, X_val_knef])
             preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
             preds_KNEF = np.round(preds_KNEF, 4)
             # min_max = MinMaxScaler(feature_range=(preds_KNEF.min(), preds_KNEF.max()))
             # preds_KNEF = min_max.fit_transform(preds_KNEF)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
                 # .apply(lambda x: x*0.003/preds_KNEF.min())
+
+        elif knef_radio == 'Мартынович С.':
+            x_col = np.array(x_col)
+            x_kpef = np.array(x_kpef)
+            X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
+            xScaler = MinMaxScaler()
+            xScaler.fit(X_val_knef.reshape(-1,X_val_knef.shape[1]))
+            xTrSc1 = xScaler.transform(X_val_knef.reshape(-1,X_val_knef.shape[1]))
+            preds_KNEF = model.predict(xTrSc1)
+            preds_KNEF = np.round(preds_KNEF, 4)
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
+
 
         else:
             xScaler = MinMaxScaler()
@@ -318,6 +345,17 @@ def preds_KNEF(model='', x_test='', x_kpef=''):
             out_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = (out_KNEF[0]-0.5)/0.5
             # out_KNEF = out_KNEF*1/min(out_KNEF)
+
+        elif knef_radio == 'Мартынович С.':
+            x_col = np.array(x_col)
+            x_kpef = np.array(x_kpef)
+            x_test = np.concatenate([x_test, x_col, x_kpef], axis=1)
+            xScaler = MinMaxScaler()
+            xScaler.fit(x_test)
+            xTrSc1 = xScaler.transform(x_test)
+            preds_KNEF = model.predict(xTrSc1[0:1])
+            out_KNEF = np.round(preds_KNEF, 4)
+            out_KNEF = out_KNEF[0]
 
         else:
             xScaler = MinMaxScaler()
@@ -412,7 +450,9 @@ if result:
     elif kpef_radio == 'Шахлин В.':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
 
-    if knef_radio == 'Новиков А.':
+    if knef_radio == 'Мартынович С.':
+        out_KNEF = preds_KNEF(model=loaded_model_Martynovich_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
+    elif knef_radio == 'Новиков А.':
         out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF)
     elif knef_radio == 'Новиков А. (ilro)':
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
