@@ -3,7 +3,6 @@ decorator==5.1.1
 flatbuffers==22.9.24
 joblib==1.1.0
 keras==2.8.0
-keras-nighly==2.5.0.dev2021032900
 Keras-Preprocessing==1.1.2
 numpy==1.23.3
 openpyxl==3.0.10
