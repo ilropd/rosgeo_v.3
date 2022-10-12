@@ -7,13 +7,14 @@ import urllib.request
 import tempfile
 import shutil
 import pickle
-from keras.models import model_from_json, load_model
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, normalize
-import io
+from keras.models import model_from_json
+from sklearn.preprocessing import MinMaxScaler
+# import io
 from io import BytesIO
 import pandas as pd
 import numpy as np
-import sklearn
+# import sklearn
+# from sklearn_gbmi import *
 # from sklearn.ensemble import GradientBoostingRegressor
 # from sklearn.experimental import enable_hist_gradient_boosting
 # from sklearn.metrics import log_loss
@@ -248,8 +249,8 @@ def load_models():
 
     # МОДЕЛИ РАСПОЗНАВАНИЯ KPEF
     # модель Виталия Шахлина
-    with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/decisiontree_shakhlin-KPEF_weights.pkl') as url_shakhlin:
-    # with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/gradientboosting_shakhlin-KPEF_weights.pkl') as url_shakhlin:
+    # with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/decisiontree_shakhlin-KPEF_weights.pkl') as url_shakhlin:
+    with urllib.request.urlopen('http://ilro.ru/KPEF/Shakhlin/gradientboosting_shakhlin-KPEF_weights.pkl') as url_shakhlin:
 
         with tempfile.NamedTemporaryFile(delete=False) as tmp_shakhlin:
             shutil.copyfileobj(url_shakhlin, tmp_shakhlin)
