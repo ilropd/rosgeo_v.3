@@ -53,6 +53,14 @@ st.write('---')
 
 st.header('Ввод данных для обработки')
 
+# подгрузка файла с примером данных .csv
+with open("Downloads/Example_rosgeology.csv", "rb") as file:
+    st.download_button(
+        label="📥 Скачать пример файла для загрузки в CSV",
+        data=file,
+        file_name="Example_rosgeology.csv"
+        )
+
 # вызываем блок для загрузки файла
 uploaded_file = st.file_uploader(label='Выберите файл в формате XLS или CSV для обработки', )
 
