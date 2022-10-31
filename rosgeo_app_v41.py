@@ -398,6 +398,7 @@ def preds_KPEF(model='', x_test=''):
         #     preds_KPEF = model.predict(x_test)
         #     preds_KPEF = np.round(preds_KPEF, 4)
         preds_KPEF = model.predict(x_test)
+        preds_KPEF = np.exp(preds_KPEF)
         preds_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = pd.DataFrame(preds_KPEF, columns=['KPEF'])
 
@@ -411,6 +412,7 @@ def preds_KPEF(model='', x_test=''):
         #     preds_KPEF = model.predict(x_test)
         #     out_KPEF = np.round(preds_KPEF, 4)
         preds_KPEF = model.predict(x_test)
+        preds_KPEF = np.exp(preds_KPEF)
         out_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = out_KPEF[0]
 
