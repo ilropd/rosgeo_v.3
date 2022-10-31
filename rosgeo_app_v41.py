@@ -299,17 +299,26 @@ result = st.button('Классифицировать')
 def preds_argmax_collectors(model='', x_test=''):
 
     if len(x_test)>1:
+
         preds_collectors = model.predict(x_test)
-        pred_args_collector = np.argmax(preds_collectors, axis=1)
-        out_collectors = args_to_types(pred_args_collector)
+        preds_collectors_noargmax = preds_collectors
+        if model is loaded_model_kononov_collectors:
+            out_collectors = preds_collectors.astype(int)
+        else:
+            pred_args_collector = np.argmax(preds_collectors, axis=1)
+            out_collectors = args_to_types(pred_args_collector)
 
     else:
         preds_collectors = model.predict(x_test)
-        pred_args_collector = np.argmax(preds_collectors, axis=1)
-        out_collectors = args_to_types(pred_args_collector)
-        out_collectors = out_collectors[0][0]
+        preds_collectors_noargmax = preds_collectors
+        if model is loaded_model_kononov_collectors:
+            out_collectors = preds_collectors.astype(int)
+        else:
+            pred_args_collector = np.argmax(preds_collectors, axis=1)
+            out_collectors = args_to_types(pred_args_collector)
+            out_collectors = out_collectors[0][0]
 
-    return out_collectors
+    return out_collectors, preds_collectors_noargmax
 
 # функция прогноза KNEF
 def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
@@ -332,12 +341,12 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
                 # .apply(lambda x: x*0.003/preds_KNEF.min())
 
         elif knef_radio == 'модель 1':
-            x_col = np.array(x_col)
+            x_col = np.array(x_col).reshape(-1,1)
             x_kpef = np.array(x_kpef)
             X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
             xScaler = MinMaxScaler()
-            xScaler.fit(X_val_knef.reshape(-1,X_val_knef.shape[1]))
-            xTrSc1 = xScaler.transform(X_val_knef.reshape(-1,X_val_knef.shape[1]))
+            xScaler.fit(X_val_knef.reshape(-1, X_val_knef.shape[1]))
+            xTrSc1 = xScaler.transform(X_val_knef.reshape(-1, X_val_knef.shape[1]))
             preds_KNEF = model.predict(xTrSc1)
             preds_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
@@ -425,17 +434,36 @@ if result:
 
     def out_cols():
         if collectors_radio == 'модель 4':
-            out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 1':
-            out_collector = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 2':
-            out_collector = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 3':
-            out_collectors = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
-        else:
-            out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+        elif collectors_radio == 'интеграционная модель':
+            out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+            out_2, out_noargmax_2 = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+            out_4, out_noargmax_4 = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
 
-        return out_collector
+            out_noargmax_1 = out_noargmax_1*0.93
+            out_noargmax_2 = out_noargmax_2*0.939
+            out_noargmax_4 = out_noargmax_4*0.9159
+
+            out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_4
+
+            out_collector = np.argmax(out_collectors_noargmax, axis=1)
+
+            if uploaded_file is not None:
+                out_collector = args_to_types(out_collector)
+            else:
+                out_collector = args_to_types(out_collector)
+                out_collector = out_collector[0][0]
+
+        else:
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+
+        return out_collector, out_collectors_noargmax
 
     out_collectors = out_cols()
 
