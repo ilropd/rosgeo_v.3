@@ -342,12 +342,12 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
                 # .apply(lambda x: x*0.003/preds_KNEF.min())
 
         elif knef_radio == 'модель 1':
-            x_col = np.array(x_col).reshape(-1,1)
+            x_col = np.array(x_col)
             x_kpef = np.array(x_kpef)
             X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
             xScaler = MinMaxScaler()
-            xScaler.fit(X_val_knef.reshape(-1, X_val_knef.shape[1]))
-            xTrSc1 = xScaler.transform(X_val_knef.reshape(-1, X_val_knef.shape[1]))
+            xScaler.fit(X_val_knef.reshape(-1,X_val_knef.shape[1]))
+            xTrSc1 = xScaler.transform(X_val_knef.reshape(-1,X_val_knef.shape[1]))
             preds_KNEF = model.predict(xTrSc1)
             preds_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
