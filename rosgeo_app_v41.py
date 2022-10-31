@@ -466,7 +466,7 @@ if result:
 
         return out_collector, out_collectors_noargmax
 
-    out_collectors = out_cols()
+    out_collector, out_collectors_noargmax = out_cols()
 
     if kpef_radio == 'модель 1':
         out_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
