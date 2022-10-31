@@ -77,11 +77,21 @@ if uploaded_file is not None:
             df = df.dropna(axis='index', how='any')
 
         else:
-            df = pd.read_excel(uploaded_file, engine='openpyxl', header=1)
-            df = df.dropna(axis='index', how='any')
-            df = df.drop([0])
+            df = pd.read_excel(uploaded_file, engine='openpyxl')
 
-        df.reset_index(drop=True, inplace=True)
+            for i in range(len(df)):
+                for j in range(len(df.iloc[i])):
+                  if df.iloc[i][j] in cols_KNEF:
+                    df.rename(columns=df.iloc[i], inplace = True)
+
+            for k in range(len(df)):
+                for l in range(len(df.iloc[k])):
+                    if type(df.iloc[k][l]) is str:
+                        # print(db.iloc[k][l])
+                        df.iloc[k][l]= np.nan
+
+            df = df.dropna(axis='index', how='any')
+            df.reset_index(drop=True, inplace=True)
 
         for i in df.columns.values:
             for j in cols_collectors:
