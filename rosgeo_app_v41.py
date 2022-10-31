@@ -29,7 +29,7 @@ st.sidebar.subheader('Прогнозирование типа коллектор
 # модель 2 - Каргальцев В.
 # модель 3 - Кононов А.
 # модель 4 - Солдатов А.
-collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1', 'модель 2', 'модель 3', 'модель 4'))
+collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1', 'модель 2', 'модель 3', 'модель 4', 'интеграционная модель'))
 st.sidebar.write('---')
 
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -300,16 +300,18 @@ def preds_argmax_collectors(model='', x_test=''):
 
     if len(x_test)>1:
         preds_collectors = model.predict(x_test)
+        preds_collectors_noargmax = preds_collectors
         pred_args_collector = np.argmax(preds_collectors, axis=1)
         out_collectors = args_to_types(pred_args_collector)
 
     else:
         preds_collectors = model.predict(x_test)
+        preds_collectors_noargmax = preds_collectors
         pred_args_collector = np.argmax(preds_collectors, axis=1)
         out_collectors = args_to_types(pred_args_collector)
         out_collectors = out_collectors[0][0]
 
-    return out_collectors
+    return out_collectors, preds_collectors_noargmax
 
 # функция прогноза KNEF
 def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
@@ -425,19 +427,39 @@ if result:
 
     def out_cols():
         if collectors_radio == 'модель 4':
-            out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 1':
-            out_collector = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 2':
-            out_collector = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 3':
-            out_collectors = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+        elif collectors_radio == 'интеграционная модель':
+            out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
+            out_2, out_noargmax_2 = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
+            out_3, out_noargmax_3 = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+            out_4, out_noargmax_4 = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+
+            out_noargmax_1 = out_noargmax_1*0.93
+            out_noargmax_2 = out_noargmax_2*0.939
+            out_noargmax_3 = out_noargmax_3*0.93
+            out_noargmax_4 = out_noargmax_4*0.9159
+
+            out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_4
+
+            out_collector = np.argmax(out_collectors_noargmax, axis=1)
+
+            if uploaded_file is not None:
+                out_collector = args_to_types(out_collector)
+            else:
+                out_collector = args_to_types(out_collector)
+                out_collector = out_collector[0][0]
         else:
             out_collector = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
 
-        return out_collector
+        return out_collector, out_collectors_noargmax
 
-    out_collectors = out_cols()
+    out_collectors, _ = out_cols()
 
     if kpef_radio == 'модель 1':
         out_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
