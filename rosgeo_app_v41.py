@@ -301,11 +301,17 @@ result = st.button('Классифицировать')
 
 # функция предсказания типа коллектора на основе выбранной модели и исходных данных
 def preds_argmax_collectors(model='', x_test=''):
-
+    ficha = np.load('Models/COLLECTORS/Kargaltsev/ficha.npy')
     if len(x_test)>1:
+        if model is loaded_model_kargaltsev_collectors:
+            for i in range(5):
+                x_test[:,i] = x_test[:,i] - ficha[i]
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
+        else:
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
 
-        preds_collectors = model.predict(x_test)
-        preds_collectors_noargmax = preds_collectors
         if model is loaded_model_kononov_collectors:
             out_collectors = preds_collectors.astype(int)
         else:
@@ -313,8 +319,16 @@ def preds_argmax_collectors(model='', x_test=''):
             out_collectors = args_to_types(pred_args_collector)
 
     else:
-        preds_collectors = model.predict(x_test)
-        preds_collectors_noargmax = preds_collectors
+        if model is loaded_model_kargaltsev_collectors:
+            x_test = x_test.to_numpy()
+            for i in range(5):
+                x_test[:,i] = x_test[:,i] - ficha[i]
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
+        else:
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
+
         if model is loaded_model_kononov_collectors:
             out_collectors = preds_collectors.astype(int)
         else:
