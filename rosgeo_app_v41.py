@@ -39,7 +39,8 @@ st.sidebar.subheader('Прогнозирование KNEF')
 # модель 1 - Мартынович С.
 # модель 2 - Новиков А. (ilro)
 # модель 3 - Новиков А.
-knef_radio = st.sidebar.radio('Модели KNEF', ('модель 1', 'модель 2', 'модель 3'))
+# модель 4 - Шахлин В.
+knef_radio = st.sidebar.radio('Модели KNEF', ('модель 1', 'модель 2', 'модель 3', 'модель 4'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -235,6 +236,14 @@ def load_models():
     loaded_model_Novikov_KNEF = model_from_json(loaded_model_json_Novikov_KNEF)
     loaded_model_Novikov_KNEF.load_weights('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_weights.h5')
     print('Loaded model Novikov KNEF from disk')
+    
+    # модель Виталия Шахлина
+     with urllib.request.urlopen('http://ilro.ru/KNEF/Shakhlin/gradientboosting_shakhlin-KNEF_weights.pkl') as url_shakhlin_knef:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_shakhlin_knef:
+            shutil.copyfileobj(url_shakhlin_knef, tmp_shakhlin_knef)
+
+    with open(tmp_shakhlin_knef.name, 'rb') as f_shakhlin_knef:
+        loaded_model_shakhlin_knef = pickle.load(f_shakhlin_knef)
 
 
     # with urllib.request.urlopen('http://ilro.ru/KNEF/Novikov/model_ilro_KNEF_model.json') as url_novikov_model:
@@ -294,8 +303,8 @@ def load_models():
            loaded_model_shakhlin_KPEF
 
 loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
-loaded_model_shakhlin_KPEF = load_models()
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, \
+loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -344,7 +353,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
 
     if len(x_test)>1:
 
-        if knef_radio == 'модель 3':
+        if model is loaded_model_Novikov_KNEF:
             X_val_knef = np.array(x_kpef).reshape(-1,1)
             xScaler = MinMaxScaler()
             xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
@@ -359,7 +368,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
                 # .apply(lambda x: x*0.003/preds_KNEF.min())
 
-        elif knef_radio == 'модель 1':
+        elif model is loaded_model_Martynovich_KNEF:
             x_col = np.array(x_col).reshape(-1,1)
             x_kpef = np.array(x_kpef)
             X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
@@ -369,7 +378,11 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             preds_KNEF = model.predict(xTrSc1)
             preds_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
-
+        
+        elif model is loaded_model_shakhlin_knef:
+            preds_KNEF = model.predict(x_test)
+            preds_KNEF = np.exp(preds_KNEF)
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF']
         else:
             xScaler = MinMaxScaler()
             xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
@@ -379,7 +392,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
 
     else:
-        if knef_radio == 'модель 3':
+        if model is loaded_model_Novikov_KNEF:
             x_test = np.array(x_test)
             X_val_kpef = np.array(x_kpef).reshape(-1,1)
             xScaler = MinMaxScaler()
@@ -393,7 +406,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             out_KNEF = (out_KNEF[0]-0.5)/0.5
             # out_KNEF = out_KNEF*1/min(out_KNEF)
 
-        elif knef_radio == 'модель 1':
+        elif model is loaded_model_Martynovich_KNEF:
             x_test = np.array(x_test)
             x_col = np.array([x_col]).reshape(-1,1)
             x_kpef = np.array(x_kpef).reshape(-1,1)
@@ -404,6 +417,11 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             preds_KNEF = model.predict(xTrSc1[0:1])
             out_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = out_KNEF[0]
+                                    
+        elif model is loaded_model_shakhlin_knef:
+            preds_KNEF = model.predict(x_test)
+            preds_KNEF = np.exp(preds_KNEF)
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF']
 
         else:
             xScaler = MinMaxScaler()
@@ -419,30 +437,30 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
 def preds_KPEF(model='', x_test=''):
 
     if len(x_test)>1:
-        # if model == 'loaded_model_shakhlin_KPEF':
-        #     st.write('shhhhhh')
-        #     preds_KPEF = model.predict(x_test)
-        #     preds_KPEF = np.exp(preds_KPEF)
-        # else:
-        #     preds_KPEF = model.predict(x_test)
-        #     preds_KPEF = np.round(preds_KPEF, 4)
-        preds_KPEF = model.predict(x_test)
-        preds_KPEF = np.exp(preds_KPEF)
-        preds_KPEF = np.round(preds_KPEF, 4)
+        if model is loaded_model_shakhlin_KPEF:
+#             st.write('shhhhhh')
+            preds_KPEF = model.predict(x_test)
+            preds_KPEF = np.exp(preds_KPEF)
+        else:
+            preds_KPEF = model.predict(x_test)
+            preds_KPEF = np.round(preds_KPEF, 4)
+#         preds_KPEF = model.predict(x_test)
+#         preds_KPEF = np.exp(preds_KPEF)
+#         preds_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = pd.DataFrame(preds_KPEF, columns=['KPEF'])
 
     else:
-        # if model == 'loaded_model_shakhlin_KPEF':
-        #     st.write('shhhhhh')
-        #     preds_KPEF = model.predict(x_test)
-        #     preds_KPEF = np.exp(preds_KPEF)
-        #     out_KPEF = np.round(preds_KPEF, 4)
-        # else:
-        #     preds_KPEF = model.predict(x_test)
-        #     out_KPEF = np.round(preds_KPEF, 4)
-        preds_KPEF = model.predict(x_test)
-        preds_KPEF = np.exp(preds_KPEF)
-        out_KPEF = np.round(preds_KPEF, 4)
+        if model is loaded_model_shakhlin_KPEF:
+            st.write('shhhhhh')
+            preds_KPEF = model.predict(x_test)
+            preds_KPEF = np.exp(preds_KPEF)
+            out_KPEF = np.round(preds_KPEF, 4)
+        else:
+            preds_KPEF = model.predict(x_test)
+            out_KPEF = np.round(preds_KPEF, 4)
+#         preds_KPEF = model.predict(x_test)
+#         preds_KPEF = np.exp(preds_KPEF)
+#         out_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = out_KPEF[0]
 
     return out_KPEF
@@ -498,6 +516,9 @@ if result:
         out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF)
     elif knef_radio == 'модель 2':
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
+    elif knef_radio == 'модель 4':
+        out_KNEF = preds_KNEF(model=loaded_model_shakhlin_knef, x_test=predict_collectors)
+     
         # st.write(out_novikov_KNEF)
 
     if uploaded_file is not None:
