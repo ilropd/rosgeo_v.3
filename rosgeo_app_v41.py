@@ -383,6 +383,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             preds_KNEF = model.predict(x_test)
             preds_KNEF = np.exp(preds_KNEF)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF']
+                                    
         else:
             xScaler = MinMaxScaler()
             xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
