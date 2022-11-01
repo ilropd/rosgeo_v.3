@@ -323,6 +323,7 @@ def preds_argmax_collectors(model='', x_test=''):
             x_test = x_test.to_numpy()
             for i in range(5):
                 x_test[:,i] = x_test[:,i] - ficha[i]
+            x_test = pd.DataFrame(x_test, columns=cols_collectors)
             preds_collectors = model.predict(x_test)
             preds_collectors_noargmax = preds_collectors
         else:
@@ -393,7 +394,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             # out_KNEF = out_KNEF*1/min(out_KNEF)
 
         elif knef_radio == 'модель 1':
-#             x_test = np.array(x_test)
+            x_test = np.array(x_test)
             x_col = np.array([x_col]).reshape(-1,1)
             x_kpef = np.array(x_kpef).reshape(-1,1)
             X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
