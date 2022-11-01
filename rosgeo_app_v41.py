@@ -497,7 +497,7 @@ if result:
         # out_all = pd.DataFrame([predict_KNEF, out_collectors, out_novikov_KNEF, out_fadeev_KPEF])
     st.write(out_all)
 
-    col_csv, col_excel, col_no1, col_no2 = st.columns(4, gap='small')
+    col_txt, col_csv, col_excel, col_no1 = st.columns(4, gap='small')
 
     out_csv = out_all.to_csv()
     out_xls = pd.DataFrame(out_all)
@@ -516,10 +516,14 @@ if result:
 
     df_xlsx = to_excel(out_xls)
 
+    with col_txt:
+        st.download_button(label='📥 Сохранить в TXT',
+                                data=out_csv,
+                                file_name= 'Rosgeology_prediction.txt')
     with col_csv:
         st.download_button(label='📥 Сохранить в CSV',
                                 data=out_csv,
-                                file_name= 'Rosgeology_prediction.txt')
+                                file_name= 'Rosgeology_prediction.csv')
     with col_excel:
         st.download_button(label='📥 Сохранить в Excel',
                                 data=df_xlsx ,
