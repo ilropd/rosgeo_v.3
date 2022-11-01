@@ -393,7 +393,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             # out_KNEF = out_KNEF*1/min(out_KNEF)
 
         elif knef_radio == 'модель 1':
-            x_test = np.array(x_test)
+#             x_test = np.array(x_test)
             x_col = np.array([x_col]).reshape(-1,1)
             x_kpef = np.array(x_kpef).reshape(-1,1)
             X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
