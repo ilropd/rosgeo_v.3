@@ -299,8 +299,8 @@ def load_models():
     print('Loaded model KPEF from disk')
 
     return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
-           loaded_model_shakhlin_KPEF
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, \
+           loaded_model_KPEF, loaded_model_shakhlin_KPEF
 
 loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
 loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, \
