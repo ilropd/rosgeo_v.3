@@ -98,7 +98,10 @@ if uploaded_file is not None:
         for i in df.columns.values:
             for j in cols_collectors:
                 if (j.lower() in i.lower()) and ('KPEF'.lower() not in i.lower()):
-                    df.rename(columns={i: j}, inplace=True)
+                    if ('gk' in j.lower()) & ('ggkp' in i.lower()):
+                        pass
+                    else:
+                        df.rename(columns={i: j}, inplace=True)
 
         for col in df.columns:
             if col not in cols_KNEF:
