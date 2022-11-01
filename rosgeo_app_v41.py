@@ -382,7 +382,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
         elif model is loaded_model_shakhlin_knef:
             preds_KNEF = model.predict(x_test)
             preds_KNEF = np.exp(preds_KNEF)
-            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF']
+            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
         
         else:
             xScaler = MinMaxScaler()
