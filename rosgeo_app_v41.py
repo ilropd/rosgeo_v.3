@@ -238,7 +238,7 @@ def load_models():
     print('Loaded model Novikov KNEF from disk')
     
     # модель Виталия Шахлина
-     with urllib.request.urlopen('http://ilro.ru/KNEF/Shakhlin/gradientboosting_shakhlin-KNEF_weights.pkl') as url_shakhlin_knef:
+    with urllib.request.urlopen('http://ilro.ru/KNEF/Shakhlin/gradientboosting_shakhlin-KNEF_weights.pkl') as url_shakhlin_knef:
         with tempfile.NamedTemporaryFile(delete=False) as tmp_shakhlin_knef:
             shutil.copyfileobj(url_shakhlin_knef, tmp_shakhlin_knef)
 
