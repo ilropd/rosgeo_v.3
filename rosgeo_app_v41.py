@@ -99,7 +99,7 @@ if uploaded_file is not None:
         for i in df.columns.values:
             for j in cols_collectors:
                 if (j.lower() in i.lower()) and ('KPEF'.lower() not in i.lower()):
-                    if ('gk' in j.lower()) & ('ggkp' in i.lower()):
+                    if (('gk' in j.lower()) and ('ggkp' not in j.lower())) and ('ggkp' in i.lower()):
                         pass
                     else:
                         df.rename(columns={i: j}, inplace=True)
