@@ -543,7 +543,10 @@ if result:
     st.write(out_all)
     
     if uploaded_file is not None:
-        uploaded_file_name = uploaded_file.name[0:10]
+        if len(uploaded_file.name) < 10:
+            uploaded_file_name = uploaded_file.name
+        else:
+            uploaded_file_name =   uploaded_file.name[0:10]
         collectors_radio_name = 'collectors-' + collectors_radio
         knef_radio_name = 'knef-' + knef_radio
         kpef_radio_name = 'kpef-' + kpef_radio
