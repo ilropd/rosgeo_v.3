@@ -19,6 +19,11 @@ import numpy as np
 # from sklearn.experimental import enable_hist_gradient_boosting
 # from sklearn.metrics import log_loss
 
+# переменные для сохрнения выбора моделей и дальнейшего использования в имени сохраняемого файла
+colectors_radio_name = ''
+knef_radio_name = ''
+kpef_radio_name = ''
+
 # делаем сайдбар с выбором моделей
 st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
 
@@ -30,7 +35,7 @@ st.sidebar.subheader('Прогнозирование типа коллектор
 # модель 3 - Кононов А.
 # модель 4 - Солдатов А.
 # интеграционная модель - объединяет в себе модели 1,2 и 4; 3 модель исключена, так как нет argmax
-collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1', 'модель 2', 'модель 3', 'модель 4', 'интеграционная модель'))
+collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1 (Багурин)', 'модель 2 (Каргальцев)', 'модель 3 (Кононов)', 'модель 4 (Солдатов)', 'интеграционная модель'))
 st.sidebar.write('---')
 
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -40,7 +45,7 @@ st.sidebar.subheader('Прогнозирование KNEF')
 # модель 2 - Новиков А. (ilro)
 # модель 3 - Новиков А.
 # модель 4 - Шахлин В.
-knef_radio = st.sidebar.radio('Модели KNEF', ('модель 1', 'модель 2', 'модель 3', 'модель 4'))
+knef_radio = st.sidebar.radio('Модели KNEF', ('модель 1 (Мартынович)', 'модель 2 (noname)', 'модель 3 (Новиков)', 'модель 4 (Шахлин)'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -48,7 +53,7 @@ st.sidebar.write('---')
 st.sidebar.subheader('Прогнозирование KPEF')
 # модель 1 - Фадеев Ю.
 # модель 2 - Шахлин В.
-kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('модель 1', 'модель 2'))
+kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('модель 1 (Фадеев)', 'модель 2 (Шахлин)'))
 
 # основной блок с выводом информации
 st.title('ПРОГНОЗИРОВАНИЕ ГЕОДАННЫХ')
@@ -471,13 +476,13 @@ if result:
     st.subheader('Результат классификации')
 
     def out_cols():
-        if collectors_radio == 'модель 4':
+        if collectors_radio == 'модель 4 (Солдтов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'модель 1':
+        elif collectors_radio == 'модель 1 (Багурин)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'модель 2':
+        elif collectors_radio == 'модель 2 (Каргальцев)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'модель 3':
+        elif collectors_radio == 'модель 3 (Кононов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'интеграционная модель':
             out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
@@ -505,19 +510,19 @@ if result:
 
     out_collectors, out_collectors_noargmax = out_cols()
 
-    if kpef_radio == 'модель 1':
+    if kpef_radio == 'модель 1 (Фадеев)':
         out_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
         # st.write(out_fadeev_KPEF)
-    elif kpef_radio == 'модель 2':
+    elif kpef_radio == 'модель 2 (Шахлин)':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
 
-    if knef_radio == 'модель 1':
+    if knef_radio == 'модель 1 (Мартынович)':
         out_KNEF = preds_KNEF(model=loaded_model_Martynovich_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
-    elif knef_radio == 'модель 3':
+    elif knef_radio == 'модель 3 (Новиков)':
         out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF)
-    elif knef_radio == 'модель 2':
+    elif knef_radio == 'модель 2 (noname)':
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
-    elif knef_radio == 'модель 4':
+    elif knef_radio == 'модель 4 (Шахлин)':
         out_KNEF = preds_KNEF(model=loaded_model_shakhlin_knef, x_test=predict_collectors)
      
         # st.write(out_novikov_KNEF)
@@ -536,6 +541,18 @@ if result:
         out_all['KPEF'] = out_KPEF
         # out_all = pd.DataFrame([predict_KNEF, out_collectors, out_novikov_KNEF, out_fadeev_KPEF])
     st.write(out_all)
+    
+    if uploaded_file is not None:
+        uploaded_file_name = uploaded_file.name[0:10]
+        collectors_radio_name = 'collectors-' + collectors_radio
+        knef_radio_name = 'knef-' + knef_radio
+        kpef_radio_name = 'kpef-' + kpef_radio
+        file_name_save = '_'.join([uploaded_file_name, collectors_radio_name, knef_radio_name, kpef_radio_name])
+    else:
+        collectors_radio_name = 'collectors-' + collectors_radio
+        knef_radio_name = 'knef-' + knef_radio
+        kpef_radio_name = 'kpef-' + kpef_radio
+        file_name_save = '_'.join(['Predict', collectors_radio_name, knef_radio_name, kpef_radio_name])    
 
     col_txt, col_csv, col_excel, col_no1 = st.columns(4, gap='small')
 
@@ -559,12 +576,12 @@ if result:
     with col_txt:
         st.download_button(label='📥 Сохранить в TXT',
                                 data=out_csv,
-                                file_name= 'Rosgeology_prediction.txt')
+                                file_name=file_name_save+'.txt')
     with col_csv:
         st.download_button(label='📥 Сохранить в CSV',
                                 data=out_csv,
-                                file_name= 'Rosgeology_prediction.csv')
+                                file_name=file_name_save+'.csv')
     with col_excel:
         st.download_button(label='📥 Сохранить в Excel',
                                 data=df_xlsx ,
-                                file_name= 'Rosgeology_prediction.xlsx')
+                                file_name=file_name_save+'.xlsx')
