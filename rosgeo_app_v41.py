@@ -315,11 +315,11 @@ def load_models():
     print('Loaded model KPEF from disk')
 
     return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
-           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, loaded_model_KPEF, \
            loaded_model_shakhlin_KPEF
 
 loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
-loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, loaded_model_KPEF, \
 loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
@@ -528,7 +528,7 @@ if result:
     st.subheader('Результат классификации')
 
     def out_cols():
-        if collectors_radio == 'модель 4 (Солдтов)':
+        if collectors_radio == 'модель 4 (Солдатов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 1 (Багурин)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
