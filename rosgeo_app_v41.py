@@ -226,7 +226,7 @@ def load_models():
     loaded_model_kargaltsev_collectors = model_from_json(loaded_model_json_collectors)
     loaded_model_kargaltsev_collectors.load_weights('Models/COLLECTORS/Kargaltsev/rgmodel19_Kargaltsev_collectors_weights.h5')
     print('Loaded model Kargaltsev COLLECTORS from disk')
-    
+
     # модель Германа Суслина
     json_file_collectors = open('Models/COLLECTORS/Suslin/Conv1d_incr_neurons_consistent_n20_suslin_collector_model.json', 'r')
     loaded_model_json_collectors = json_file_collectors.read()
@@ -252,7 +252,7 @@ def load_models():
     loaded_model_Novikov_KNEF = model_from_json(loaded_model_json_Novikov_KNEF)
     loaded_model_Novikov_KNEF.load_weights('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_weights.h5')
     print('Loaded model Novikov KNEF from disk')
-    
+
     # модель Виталия Шахлина
     with urllib.request.urlopen('http://ilro.ru/KNEF/Shakhlin/gradientboosting_shakhlin-KNEF_weights.pkl') as url_shakhlin_knef:
         with tempfile.NamedTemporaryFile(delete=False) as tmp_shakhlin_knef:
@@ -342,10 +342,9 @@ def preds_argmax_collectors(model='', x_test=''):
         else:
             pred_args_collector = np.argmax(preds_collectors, axis=1)
             out_collectors = args_to_types(pred_args_collector)
-        
+
         if model is loaded_model_suslin_collectors:
             preds_20 = loaded_model_bagurin_collectors.predict(x_test)
-            preds_collectors_noargmax = preds_20
             preds_20 = np.argmax(preds_20, axis=1)
             preds_20 = args_to_types(preds_20)
             preds_20 = preds_20[0][0]
@@ -373,18 +372,13 @@ def preds_argmax_collectors(model='', x_test=''):
             out_collectors = np.array(out_collectors[0][0])
 
             out_collectors = np.concatenate([preds_20_out, out_collectors], axis=1)
-            out_collectors = pd.DataFrame(out_collectors)  
-        else:
-            preds_collectors = model.predict(x_test)
-            preds_collectors_noargmax = preds_collectors
-            pred_args_collector = np.argmax(preds_collectors, axis=1)
-            out_collectors = args_to_types(pred_args_collector)
-        
+            out_collectors = pd.DataFrame(out_collectors)
+
     else:
         if model is loaded_model_suslin_collectors:
             st.write('*Модель 5 не может быть использована для классификации одной строки данных. Классификация будет проведена с использванием Модель 2.*')
             model = loaded_model_kargaltsev_collectors
-        
+
         if model is loaded_model_kargaltsev_collectors:
             x_test = x_test.to_numpy()
             for i in range(5):
@@ -435,12 +429,12 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             preds_KNEF = model.predict(xTrSc1)
             preds_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
-        
+
         elif model is loaded_model_shakhlin_knef:
             preds_KNEF = model.predict(x_test)
             preds_KNEF = np.exp(preds_KNEF)
             out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
-        
+
         else:
             xScaler = MinMaxScaler()
             xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
@@ -475,7 +469,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             preds_KNEF = model.predict(xTrSc1[0:1])
             out_KNEF = np.round(preds_KNEF, 4)
             out_KNEF = out_KNEF[0]
-                                    
+
         elif model is loaded_model_shakhlin_knef:
             preds_KNEF = model.predict(x_test)
             preds_KNEF = np.exp(preds_KNEF)
@@ -528,7 +522,7 @@ if result:
     st.subheader('Результат классификации')
 
     def out_cols():
-        if collectors_radio == 'модель 4 (Солдатов)':
+        if collectors_radio == 'модель 4 (Солдтов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 1 (Багурин)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
@@ -578,7 +572,7 @@ if result:
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
     elif knef_radio == 'модель 4 (Шахлин)':
         out_KNEF = preds_KNEF(model=loaded_model_shakhlin_knef, x_test=predict_collectors)
-     
+
         # st.write(out_novikov_KNEF)
 
     df = df.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
@@ -595,9 +589,9 @@ if result:
         out_all['Коллекторы'] = out_collectors
         out_all['KNEF'] = out_KNEF.round(4)
         out_all['KPEF'] = out_KPEF.round(4)
-        
+
     st.write(out_all)
-    
+
     if uploaded_file is not None:
         if len(uploaded_file.name) < 10:
             uploaded_file_name = uploaded_file.name
@@ -611,7 +605,7 @@ if result:
         collectors_radio_name = 'collectors-' + collectors_radio
         knef_radio_name = 'knef-' + knef_radio
         kpef_radio_name = 'kpef-' + kpef_radio
-        file_name_save = '_'.join(['Predict', collectors_radio_name, knef_radio_name, kpef_radio_name])    
+        file_name_save = '_'.join(['Predict', collectors_radio_name, knef_radio_name, kpef_radio_name])
 
     col_txt, col_csv, col_excel, col_no1 = st.columns(4, gap='small')
 
