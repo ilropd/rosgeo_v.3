@@ -19,6 +19,9 @@ import numpy as np
 # from sklearn.experimental import enable_hist_gradient_boosting
 # from sklearn.metrics import log_loss
 
+# подгружаем библиотеку генератора для работы модели коллектров Германа Суслина
+from Generator import Generator
+
 # переменные для сохрнения выбора моделей и дальнейшего использования в имени сохраняемого файла
 colectors_radio_name = ''
 knef_radio_name = ''
@@ -35,7 +38,7 @@ st.sidebar.subheader('Прогнозирование типа коллектор
 # модель 3 - Кононов А.
 # модель 4 - Солдатов А.
 # интеграционная модель - объединяет в себе модели 1,2 и 4; 3 модель исключена, так как нет argmax
-collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1 (Багурин)', 'модель 2 (Каргальцев)', 'модель 3 (Кононов)', 'модель 4 (Солдатов)', 'интеграционная модель'))
+collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1 (Багурин)', 'модель 2 (Каргальцев)', 'модель 3 (Кононов)', 'модель 4 (Солдатов)', 'модель 5 (Суслин)', 'интеграционная модель'))
 st.sidebar.write('---')
 
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -223,6 +226,14 @@ def load_models():
     loaded_model_kargaltsev_collectors = model_from_json(loaded_model_json_collectors)
     loaded_model_kargaltsev_collectors.load_weights('Models/COLLECTORS/Kargaltsev/rgmodel19_Kargaltsev_collectors_weights.h5')
     print('Loaded model Kargaltsev COLLECTORS from disk')
+    
+    # модель Германа Суслина
+    json_file_collectors = open('Models/COLLECTORS/Suslin/Conv1d_incr_neurons_consistent_n20_suslin_collector_model.json', 'r')
+    loaded_model_json_collectors = json_file_collectors.read()
+    json_file_collectors.close()
+    loaded_model_suslin_collectors = model_from_json(loaded_model_json_collectors)
+    loaded_model_suslin_collectors.load_weights('Models/COLLECTORS/Suslin/Conv1d_incr_neurons_consistent_n20_suslin_collector_model.h5')
+    print('Loaded model Suslin COLLECTORS from disk')
 
     # МОДЕЛИ РАСПОЗНАВАНИЯ KNEF
 
@@ -303,13 +314,13 @@ def load_models():
     loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
     print('Loaded model KPEF from disk')
 
-    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, \
-           loaded_model_KPEF, loaded_model_shakhlin_KPEF
+    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_shakhlin_KPEF
 
-loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, \
-loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, \
-loaded_model_KPEF, loaded_model_shakhlin_KPEF = load_models()
+loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+loaded_model_shakhlin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
@@ -331,8 +342,43 @@ def preds_argmax_collectors(model='', x_test=''):
         else:
             pred_args_collector = np.argmax(preds_collectors, axis=1)
             out_collectors = args_to_types(pred_args_collector)
+        
+        if model is loaded_model_suslin_collectors:
+            preds_20 = loaded_model_bagurin_collectors.predict(x_test)
+            preds_20 = np.argmax(preds_20, axis=1)
+            preds_20 = args_to_types(preds_20)
+            preds_20 = preds_20[0][0]
+            preds_20_out = preds_20[0][0][:20]
+            preds_20_out = np.array(preds_20_out)
+            # индексы столбцов, которые будут использованы
+            x_columns = [0, 1, 2, 4, 5, 6, 7]
+            # индексы столбцов, которые будут нормализованы
+            norm_columns = [0, 1, 2, 3, 4, 5, 6]
+            lenght = 20
 
+            Gen = Generator(x_data=x_test, lenght=lenght, batch_size=len(x_test) - lenght, x_columns=x_columns, only_colls=True)
+            norm_fit, _ = Gen.normalize(columns=norm_columns)
+
+            x_test = []
+
+            for x in Gen:
+                x_test.append(x[0])
+
+            x_test = pd.DataFrame(x_test)
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
+            pred_args_collector = np.argmax(preds_collectors, axis=1)
+            out_collectors = args_to_types(pred_args_collector)
+            out_collectors = np.array(out_collectors[0][0])
+
+            out_collectors = np.concatenate([preds_20_out, out_collectors], axis=1)
+            out_collectors = pd.DataFrame(out_collectors)          
+        
     else:
+        if model is loaded_model_suslin_collectors:
+            st.write('*Модель 5 не может быть использована для классификации одной строки данных. Классификация будет проведена с использванием Модель 2.*')
+            model = loaded_model_kargaltsev_collectors
+        
         if model is loaded_model_kargaltsev_collectors:
             x_test = x_test.to_numpy()
             for i in range(5):
@@ -484,6 +530,8 @@ if result:
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 3 (Кононов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
+        elif collectors_radio == 'модель 5 (Суслин)':
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_suslin_collectors, x_test=predict_collectors)
         elif collectors_radio == 'интеграционная модель':
             out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
             out_2, out_noargmax_2 = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
