@@ -333,8 +333,17 @@ def preds_argmax_collectors(model='', x_test=''):
                 x_test[:,i] = x_test[:,i] - ficha[i]
             preds_collectors = model.predict(x_test)
             preds_collectors_noargmax = preds_collectors
-            
-        elif model is loaded_model_suslin_collectors:
+        else:
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
+
+        if model is loaded_model_kononov_collectors:
+            out_collectors = preds_collectors.astype(int)
+        else:
+            pred_args_collector = np.argmax(preds_collectors, axis=1)
+            out_collectors = args_to_types(pred_args_collector)
+
+        if model is loaded_model_suslin_collectors:
             preds_20 = loaded_model_bagurin_collectors.predict(x_test)
             preds_20 = np.argmax(preds_20, axis=1)
             preds_20 = args_to_types(preds_20)
@@ -364,15 +373,6 @@ def preds_argmax_collectors(model='', x_test=''):
 
             out_collectors = np.concatenate([preds_20_out, out_collectors], axis=1)
             out_collectors = pd.DataFrame(out_collectors)
-        else:
-            preds_collectors = model.predict(x_test)
-            preds_collectors_noargmax = preds_collectors
-
-        if model is loaded_model_kononov_collectors:
-            out_collectors = preds_collectors.astype(int)
-        else:
-            pred_args_collector = np.argmax(preds_collectors, axis=1)
-            out_collectors = args_to_types(pred_args_collector)
 
     else:
         if model is loaded_model_suslin_collectors:
@@ -575,8 +575,9 @@ if result:
 
         # st.write(out_novikov_KNEF)
 
+    df = df.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
+
     if uploaded_file is not None:
-        df = df.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
         # out_all = pd.concat([df, out_collectors, out_novikov_KNEF, out_fadeev_KPEF], axis=1)
         out_all = pd.DataFrame(df)
         out_all['Коллекторы'] = out_collectors
@@ -584,7 +585,6 @@ if result:
         out_all['KPEF'] = out_KPEF.round(4)
 
     else:
-        predict_KNEF = predict_KNEF.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
         out_all = pd.DataFrame(predict_KNEF)
         out_all['Коллекторы'] = out_collectors
         out_all['KNEF'] = out_KNEF.round(4)
