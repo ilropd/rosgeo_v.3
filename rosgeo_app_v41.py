@@ -575,9 +575,8 @@ if result:
 
         # st.write(out_novikov_KNEF)
 
-    df = df.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
-
     if uploaded_file is not None:
+        df = df.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
         # out_all = pd.concat([df, out_collectors, out_novikov_KNEF, out_fadeev_KPEF], axis=1)
         out_all = pd.DataFrame(df)
         out_all['Коллекторы'] = out_collectors
@@ -585,6 +584,7 @@ if result:
         out_all['KPEF'] = out_KPEF.round(4)
 
     else:
+        predict_KNEF = predict_KNEF.round({'ГЛУБИНА': 3, 'GGKP': 4, 'GK': 4, 'PE': 4, 'DS': 4, 'DTP': 4, 'Wi': 4, 'BK': 4, 'BMK': 4})
         out_all = pd.DataFrame(predict_KNEF)
         out_all['Коллекторы'] = out_collectors
         out_all['KNEF'] = out_KNEF.round(4)
