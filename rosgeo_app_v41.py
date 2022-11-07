@@ -501,7 +501,7 @@ if result:
         elif collectors_radio == 'модель 3 (Кононов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 5 (Суслин)':
-            out_collector, _ = preds_argmax_collectors(model=loaded_model_suslin_collectors, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_suslin_collectors, x_test=predict_collectors)
         elif collectors_radio == 'интеграционная модель':
             out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
             out_2, out_noargmax_2 = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
