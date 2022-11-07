@@ -238,11 +238,11 @@ def load_models():
     # МОДЕЛИ РАСПОЗНАВАНИЯ KNEF
 
     # модель Степана Мартыновича
-    json_file_KNEF = open('Models/KNEF/Martynovich/KNEF_final_Martynovich_model.json', 'r')
+    json_file_KNEF = open('Models/KNEF/Martynovich/Martynovich_final_KNEF_best.json', 'r')
     loaded_model_json_KNEF = json_file_KNEF.read()
     json_file_KNEF.close()
     loaded_model_Martynovich_KNEF = model_from_json(loaded_model_json_KNEF)
-    loaded_model_Martynovich_KNEF.load_weights('Models/KNEF/Martynovich/KNEF_final_Martynovich_weights.h5')
+    loaded_model_Martynovich_KNEF.load_weights('Models/KNEF/Martynovich/Martynovich_final_KNEF_weights_best.h5')
     print('Loaded model KNEF Martynovich from disk')
 
     # модель Алексея Новикова
