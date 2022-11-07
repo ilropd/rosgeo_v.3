@@ -324,12 +324,13 @@ def preds_argmax_collectors(model='', x_test=''):
 
         if model is loaded_model_suslin_collectors:
             preds_20 = loaded_model_bagurin_collectors.predict(x_test)
+            preds_collectors_noargmax = preds_20
             preds_20 = np.argmax(preds_20, axis=1)
             preds_20 = args_to_types(preds_20)
             preds_20 = preds_20[0][0]
             preds_20_out = preds_20[0][0][:20]
             preds_20_out = np.array(preds_20_out)
-            
+
             # убираем столбец, который не участвует в генераторе
             x_data = np.delete(x_test, 3, axis=1)
             x_data2 = get_x(x_data)
@@ -342,6 +343,11 @@ def preds_argmax_collectors(model='', x_test=''):
 
             out_collectors = np.concatenate([preds_20_out, out_collectors], axis=1)
             out_collectors = pd.DataFrame(out_collectors)
+        else:
+            preds_collectors = model.predict(x_test)
+            preds_collectors_noargmax = preds_collectors
+            pred_args_collector = np.argmax(preds_collectors, axis=1)
+            out_collectors = args_to_types(pred_args_collector)
 
     else:
         if model is loaded_model_suslin_collectors:
