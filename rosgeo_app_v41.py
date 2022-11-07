@@ -335,10 +335,10 @@ def preds_argmax_collectors(model='', x_test=''):
             preds_collectors = model.predict(x_data2)
             preds_collectors_noargmax = preds_collectors
             pred_args_collector = np.argmax(preds_collectors, axis=1)
-            out_collectors = args_to_types(pred_args_collector)
-            out_collectors = np.array(out_collectors[0][0])
+            out_collectors_ = args_to_types(pred_args_collector)
+            out_collectors_ = np.array(out_collectors_[0][0])
 
-            out_collectors = np.concatenate([preds_20_out, out_collectors], axis=1)
+            out_collectors = np.concatenate([preds_20_out, out_collectors_], axis=1)
             out_collectors = pd.DataFrame(out_collectors)
         else:
             preds_collectors = model.predict(x_test)
