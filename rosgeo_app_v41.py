@@ -27,6 +27,12 @@ colectors_radio_name = ''
 knef_radio_name = ''
 kpef_radio_name = ''
 
+# функция генератора для модели Германа Суслина
+def get_x(db, length=20):
+    form = db.shape[0]-length
+    x = [db[i:i + length] for i in range(form)]
+    return np.array(x)
+
 # делаем сайдбар с выбором моделей
 st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
 
@@ -261,33 +267,6 @@ def load_models():
     with open(tmp_shakhlin_knef.name, 'rb') as f_shakhlin_knef:
         loaded_model_shakhlin_knef = pickle.load(f_shakhlin_knef)
 
-
-    # with urllib.request.urlopen('http://ilro.ru/KNEF/Novikov/model_ilro_KNEF_model.json') as url_novikov_model:
-    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_novikov_model:
-    #         shutil.copyfileobj(url_novikov_model, tmp_novikov_model)
-    #
-    # with urllib.request.urlopen('http://ilro.ru/KNEF/Novikov/model_ilro_KNEF_weights.h5') as url_novikov_weights:
-    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_novikov_weights:
-    #         shutil.copyfileobj(url_novikov_weights, tmp_novikov_weights)
-    #
-    # with open(tmp_novikov_model.name, 'rb') as json_file_KNEF:
-    #     # loaded_model_json_KNEF = json_file_KNEF.read()
-    #     # json_file_KNEF.close()
-    #     loaded_model_KNEF = model_from_json(json_file_KNEF)
-    #     json_file_KNEF.close()
-    #
-    # with open(tmp_novikov_weights.name, 'rb') as tmp_novikov_weights:
-    #     loaded_model_KNEF.load_weights(tmp_novikov_weights)
-
-
-    # json_file_collectors = open('Models/COLLECTORS/Collectors_base_model.json', 'r')
-    # loaded_model_json_collectors = json_file_collectors.read()
-    # json_file_collectors.close()
-    # loaded_model_collectors = model_from_json(loaded_model_json_collectors)
-    # loaded_model_collectors.load_weights('Models/COLLECTORS/Collectors_base_model.h5')
-    # print('Loaded model COLLECTORS from disk')
-
-
     json_file_KNEF = open('Models/KNEF/model_ilro_KNEF_model.json', 'r')
     loaded_model_json_KNEF = json_file_KNEF.read()
     json_file_KNEF.close()
@@ -350,22 +329,12 @@ def preds_argmax_collectors(model='', x_test=''):
             preds_20 = preds_20[0][0]
             preds_20_out = preds_20[0][0][:20]
             preds_20_out = np.array(preds_20_out)
-            # индексы столбцов, которые будут использованы
-            x_columns = [0, 1, 2, 4, 5, 6, 7]
-            # индексы столбцов, которые будут нормализованы
-            norm_columns = [0, 1, 2, 3, 4, 5, 6]
-            lenght = 20
+            
+            # убираем столбец, который не участвует в генераторе
+            x_data = np.delete(x_test, 3, axis=1)
+            x_data2 = get_x(x_data)
 
-            Gen = Generator(x_data=x_test, lenght=lenght, batch_size=len(x_test) - lenght, x_columns=x_columns, only_colls=True)
-            norm_fit, _ = Gen.normalize(columns=norm_columns)
-
-            x_test = []
-
-            for x in Gen:
-                x_test.append(x[0])
-
-            x_test = pd.DataFrame(x_test)
-            preds_collectors = model.predict(x_test)
+            preds_collectors = model.predict(x_data2)
             preds_collectors_noargmax = preds_collectors
             pred_args_collector = np.argmax(preds_collectors, axis=1)
             out_collectors = args_to_types(pred_args_collector)
