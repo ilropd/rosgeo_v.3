@@ -8,7 +8,7 @@ import tempfile
 import shutil
 import pickle
 from keras.models import model_from_json
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 # import io
 from io import BytesIO
 import pandas as pd
@@ -29,6 +29,12 @@ def get_x(db, length=20):
     form = db.shape[0]-length
     x = [db[i:i + length] for i in range(form)]
     return np.array(x)
+
+# функция генератора для модели KPEF Германа Суслина
+def get_y_data_cols(db, length=16):
+    form = db.shape[0]-length
+    y_coll = [db[i] for i in range(form)]
+    return np.array(y_coll)
 
 # делаем сайдбар с выбором моделей
 st.sidebar.header('ВЫБОР МОДЕЛЕЙ ДЛЯ ПРОГНОЗИРОВАНИЯ ГЕОДАННЫХ')
@@ -59,7 +65,8 @@ st.sidebar.write('---')
 st.sidebar.subheader('Прогнозирование KPEF')
 # модель 1 - Фадеев Ю.
 # модель 2 - Шахлин В.
-kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('модель 1 (Фадеев)', 'модель 2 (Шахлин)'))
+# модель 3 - Суслин Г.
+kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('модель 1 (Фадеев)', 'модель 2 (Шахлин)', 'модель 3 (Суслин)'))
 
 # основной блок с выводом информации
 st.title('ПРОГНОЗИРОВАНИЕ ГЕОДАННЫХ')
@@ -281,6 +288,14 @@ def load_models():
 
     with open(tmp_shakhlin.name, 'rb') as f_shakhlin:
         loaded_model_shakhlin_KPEF = pickle.load(f_shakhlin)
+       
+    # модель Германа Суслина
+    json_file_KPEF = open('Models/KPEF/Suslin/test_unet_core_unet_n16_second_suslin_kpef_model.json', 'r')
+    loaded_model_json_KPEF = json_file_KPEF.read()
+    json_file_KPEF.close()
+    loaded_model_suslin_KPEF = model_from_json(loaded_model_json_KPEF)
+    loaded_model_suslin_KPEF.load_weights('Models/KPEF/Suslin/test_unet_core_unet_n16_second_suslin_kpef_model.h5')
+    print('Loaded model KPEF Suslin from disk')
 
     # модель Юрия Фадеева
     json_file_KPEF = open('Models/KPEF/KPEF_baseline_model.json', 'r')
@@ -291,14 +306,45 @@ def load_models():
     print('Loaded model KPEF from disk')
 
     return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
-           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, loaded_model_KPEF, \
-           loaded_model_shakhlin_KPEF
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF
 
 loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
-loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_shakhlin_knef, loaded_model_KPEF, \
-loaded_model_shakhlin_KPEF = load_models()
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF = load_models()
 
 result = st.button('Классифицировать')
+
+def integration_coll(model1=loaded_model_bagurin_collectors,
+                     model2=loaded_model_kargaltsev_collectors,
+                     model3=loaded_model_soldatov_collectors,
+                     x_test=predict_collectors):
+
+    out_1, out_noargmax_1 = preds_argmax_collectors(model=model1, x_test=x_test)
+    out_2, out_noargmax_2 = preds_argmax_collectors(model=model2, x_test=x_test)
+    out_3, out_noargmax_3 = preds_argmax_collectors(model=model3, x_test=x_test)
+
+    out_noargmax_1 = out_noargmax_1*0.93
+    out_noargmax_2 = out_noargmax_2*0.939
+    out_noargmax_3 = out_noargmax_3*0.9159
+
+    out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_3
+    out_collectors_noargmax = np.array(out_collectors_noargmax)
+
+    out_collector = np.argmax(out_collectors_noargmax, axis=1)
+
+    out = []
+    for i in out_collector:
+        if i == 0:
+            out.append([1., 0., 0.])
+        elif i == 1:
+            out.append([0., 1., 0.])
+        elif i == 2:
+            out.append([0., 0., 1.])
+        else:
+            out.append([1., 0., 0.])
+
+    return np.array(out)
 
 # функция предсказания типа коллектора на основе выбранной модели и исходных данных
 def preds_argmax_collectors(model='', x_test=''):
@@ -464,6 +510,30 @@ def preds_KPEF(model='', x_test=''):
 #             st.write('shhhhhh')
             preds_KPEF = model.predict(x_test)
             preds_KPEF = np.exp(preds_KPEF)
+        
+        elif model is loaded_model_suslin_KPEF:
+            preds_KPEF_16 = loaded_model_shakhlin_KPEF.predict(x_test)
+            preds_KPEF_16 = np.exp(preds_KPEF_16)
+            preds_KPEF_16 = np.round(preds_KPEF_16, 4)
+            preds_KPEF_16 = preds_KPEF_16[:16]
+            preds_KPEF_16 = preds_KPEF_16.reshape(-1,1)
+
+            # убираем столбец, который не участвует в генераторе
+            x_data = np.delete(x_test, 3, axis=1)
+
+            object = StandardScaler()
+            scale = object.fit_transform(x_data)
+
+            y_data_colls = integration_coll(x_test=x_test)
+
+            x_data_1 = np.concatenate([scale, y_data_colls], axis=1)
+            x_data_2 = get_x(x_data_1, length=16)
+
+            preds_KPEF = model.predict(x_data_2)
+            preds_KPEF = np.round(preds_KPEF, 4)
+
+            preds_KPEF = np.concatenate([preds_KPEF_16, preds_KPEF])
+        
         else:
             preds_KPEF = model.predict(x_test)
             preds_KPEF = np.round(preds_KPEF, 4)
@@ -471,10 +541,14 @@ def preds_KPEF(model='', x_test=''):
 #         preds_KPEF = np.exp(preds_KPEF)
 #         preds_KPEF = np.round(preds_KPEF, 4)
         out_KPEF = pd.DataFrame(preds_KPEF, columns=['KPEF'])
-
+    
     else:
+        if model is loaded_model_suslin_KPEF:
+            st.write('*Модель 3 не может быть использована для классификации одной строки данных. Классификация будет проведена с использванием Модель 2.*')
+            model = loaded_model_shakhlin_KPEF
+            
         if model is loaded_model_shakhlin_KPEF:
-            st.write('shhhhhh')
+#             st.write('shhhhhh')
             preds_KPEF = model.predict(x_test)
             preds_KPEF = np.exp(preds_KPEF)
             out_KPEF = np.round(preds_KPEF, 4)
@@ -534,6 +608,8 @@ if result:
         # st.write(out_fadeev_KPEF)
     elif kpef_radio == 'модель 2 (Шахлин)':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
+    elif kpef_radio == 'модель 3 (Суслин)':
+        out_KPEF = preds_KPEF(model=loaded_model_suslin_KPEF, x_test=predict_collectors)
 
     if knef_radio == 'модель 1 (Мартынович)':
         out_KNEF = preds_KNEF(model=loaded_model_Martynovich_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
