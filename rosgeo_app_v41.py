@@ -427,8 +427,11 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
 
         if model is loaded_model_Novikov_KNEF:
             cols = ['ГЛУБИНА', 'GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK', 'Коллектор', 'KPEF']
-            x_col = np.array(x_col)
+            x_col = np.array(x_col).reshape(-1,1)
             x_kpef = np.array(x_kpef)
+            print(x_test.shape)
+            print(x_col.shape)
+            print(x_kpef.shape)
             x = np.concatenate([x_test, x_col, x_kpef], axis=1)
 
             xScaler = MinMaxScaler()
