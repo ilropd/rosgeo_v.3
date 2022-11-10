@@ -394,6 +394,7 @@ def preds_argmax_collectors(model='', x_test=''):
             preds_collectors_noargmax = preds_collectors
             pred_args_collector = np.argmax(preds_collectors, axis=1)
             out_collectors = args_to_types(pred_args_collector)
+            out_collectors = pd.DataFrame(out_collectors, columns='Коллектор')
 
     else:
         if model is loaded_model_suslin_collectors:
@@ -427,7 +428,6 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
 
         if model is loaded_model_Novikov_KNEF:
             cols = ['ГЛУБИНА', 'GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK', 'Коллектор', 'KPEF']
-            x_col = x_col.tolist()
             x_col = np.array(x_col)
             x_kpef = np.array(x_kpef)
             x = np.concatenate([x_test, x_col, x_kpef], axis=1)
