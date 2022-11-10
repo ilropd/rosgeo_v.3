@@ -426,12 +426,12 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
     if len(x_test)>1:
 
         if model is loaded_model_Novikov_KNEF:
+            cols_x = ['ГЛУБИНА', 'GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK']
             cols = ['ГЛУБИНА', 'GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK', 'Коллектор', 'KPEF']
-            x_test = np.array(x_test)
-            x_col = pd.DataFrame(x, columns='Коллектор')
-            x_col = np.array(x_col)
-            x_kpef = np.array(x_kpef)
-            x = np.concatenate([x_test, x_col, x_kpef], axis=1)
+            x_test = pd.DataFrame(x_test, columns=cols_x)
+            x_test['Коллектор'] = x_col
+            x_test['KPEF'] = x_kpef
+            x = np.array(x_test)
 
             xScaler = MinMaxScaler()
             xScaler.fit(x.reshape(-1, x.shape[1]))
