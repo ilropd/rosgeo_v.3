@@ -430,7 +430,7 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
             x_test = np.array(x_test)
             x_col = np.array(x_col)
             x_kpef = np.array(x_kpef)
-            x = np.concatenate([x_test, x_kpef], axis=1)
+            x = np.concatenate([x_test, x_col, x_kpef], axis=1)
 
             xScaler = MinMaxScaler()
             xScaler.fit(x.reshape(-1, x.shape[1]))
