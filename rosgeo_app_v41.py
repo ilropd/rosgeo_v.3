@@ -638,7 +638,7 @@ if result:
     if knef_radio == 'модель 1 (Мартынович)':
         out_KNEF = preds_KNEF(model=loaded_model_Martynovich_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
     elif knef_radio == 'модель 3 (Новиков)':
-        out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF)
+        out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
     elif knef_radio == 'модель 2 (noname)':
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
     elif knef_radio == 'модель 4 (Шахлин)':
