@@ -10,7 +10,6 @@ import pickle
 from keras.models import model_from_json
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 # import io
-import wget
 from io import BytesIO
 import pandas as pd
 import numpy as np
