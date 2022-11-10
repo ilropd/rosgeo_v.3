@@ -7,6 +7,7 @@ import urllib.request
 import tempfile
 import shutil
 import pickle
+from keras.utils.data_utils import get_file
 from keras.models import model_from_json
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 # import io
@@ -256,11 +257,14 @@ def load_models():
     print('Loaded model KNEF Martynovich from disk')
 
     # модель Алексея Новикова
-    json_file_Novikov_KNEF = open('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_model.json', 'r')
+    json_file_Novikov_KNEF = open('Models/KNEF/Novikov/model_Novikov_var4_KNEF_80_without0_model.json', 'r')
     loaded_model_json_Novikov_KNEF = json_file_Novikov_KNEF.read()
     json_file_Novikov_KNEF.close()
     loaded_model_Novikov_KNEF = model_from_json(loaded_model_json_Novikov_KNEF)
-    loaded_model_Novikov_KNEF.load_weights('Models/KNEF/Novikov/model_Novikov_var3_KNEF_80_without0_weights.h5')
+    weights_novikov_path = get_file(
+            'model_Novikov_var4_KNEF_80_without0_weights.h5',
+            'http://ilro.ru/KNEF/Novikov/model_Novikov_var4_KNEF_80_without0_weights.h5')
+    loaded_model_Novikov_KNEF.load_weights(weights_novikov_path)
     print('Loaded model Novikov KNEF from disk')
 
     # модель Виталия Шахлина
@@ -393,7 +397,7 @@ def preds_argmax_collectors(model='', x_test=''):
 
     else:
         if model is loaded_model_suslin_collectors:
-            st.write('*Модель 5 не может быть использована для классификации одной строки данных. Классификация будет проведена с использванием Модель 2.*')
+            st.write('*Модель 5 не может быть использована для классификации Коллекторов по одной строке данных. Классификация будет проведена с использванием Модель 2.*')
             model = loaded_model_kargaltsev_collectors
 
         if model is loaded_model_kargaltsev_collectors:
@@ -422,19 +426,40 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
     if len(x_test)>1:
 
         if model is loaded_model_Novikov_KNEF:
-            X_val_knef = np.array(x_kpef).reshape(-1,1)
+            cols = ['ГЛУБИНА', 'GGKP', 'GK', 'PE', 'DS', 'DTP', 'Wi', 'BK', 'BMK', 'Коллектор', 'KPEF']
+            x_col = np.array(x_col).reshape(-1,1)
+            x_kpef = np.array(x_kpef)
+            x = np.concatenate([x_test, x_col, x_kpef], axis=1)
+
             xScaler = MinMaxScaler()
-            xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
-            xValSc = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
-            xValSc1 = xValSc[:, 0:5]
-            xValSc2 = xValSc[:, 5:8]
-            preds_KNEF = model.predict([xValSc1, xValSc2, X_val_knef])
-            preds_KNEF = np.round(((preds_KNEF-0.5)/0.5), 4)
+            xScaler.fit(x.reshape(-1, x.shape[1]))
+            xTrSc1 = xScaler.transform(x.reshape(-1, x.shape[1]))
+            preds_KNEF = loaded_model_Martynovich_KNEF.predict(xTrSc1)
             preds_KNEF = np.round(preds_KNEF, 4)
-            # min_max = MinMaxScaler(feature_range=(preds_KNEF.min(), preds_KNEF.max()))
-            # preds_KNEF = min_max.fit_transform(preds_KNEF)
-            out_KNEF = pd.DataFrame(preds_KNEF, columns=['KNEF'])
-                # .apply(lambda x: x*0.003/preds_KNEF.min())
+
+            novikov_db = pd.DataFrame(x, columns=cols)
+            novikov_db_2 = novikov_db[(novikov_db['BK'] <= 5000) & (novikov_db['Коллектор'] == '80')]
+
+            X_val_pd = novikov_db_2.drop(columns=['ГЛУБИНА','Коллектор'], axis=1)
+            X_val = np.array(X_val_pd)
+            xScaler = MinMaxScaler()
+            xScaler.fit(X_val.reshape(-1,X_val.shape[1]))
+            xValSc = xScaler.transform(X_val.reshape(-1,X_val.shape[1]))
+            xValSc1 = xValSc[:,0:5]
+            xValSc2 = xValSc[:,5:8]
+            X_val_kpef = xValSc[:,8:9]
+            prediction = model.predict([xValSc1, xValSc2, X_val_kpef])
+
+            novikov_db_2['KNEF'] = prediction
+            novikov_db_2.reset_index(inplace=True)
+
+            novikov_list = preds_KNEF.tolist()
+            # print(novikov_list[int(novikov_db_2['index'][i])][0])
+
+            for i in range(len(novikov_db_2)):
+                novikov_list[int(novikov_db_2['index'][i])][0] = novikov_db_2['KNEF'][i]
+
+            out_KNEF = pd.DataFrame(novikov_list, columns=['KNEF'])
 
         elif model is loaded_model_Martynovich_KNEF:
             x_col = np.array(x_col).reshape(-1,1)
@@ -462,18 +487,17 @@ def preds_KNEF(model='', x_test='', x_kpef='', x_col=''):
 
     else:
         if model is loaded_model_Novikov_KNEF:
+            st.write('*Модель 3 не может быть использована для классификации KNEF по одной строке  данных. Классификация будет проведена с использванием Модель 1.*')
             x_test = np.array(x_test)
-            X_val_kpef = np.array(x_kpef).reshape(-1,1)
+            x_col = np.array([x_col]).reshape(-1,1)
+            x_kpef = np.array(x_kpef).reshape(-1,1)
+            X_val_knef = np.concatenate([x_test, x_col, x_kpef], axis=1)
             xScaler = MinMaxScaler()
-            xScaler.fit(x_test.reshape(-1,x_test.shape[1]))
-            xValSc = xScaler.transform(x_test.reshape(-1,x_test.shape[1]))
-            st.dataframe(xValSc)
-            xValSc1 = xValSc[:, 0:5]
-            xValSc2 = xValSc[:, 5:8]
-            preds_KNEF = model.predict([xValSc1[0:1], xValSc2[0:1], X_val_kpef[0:1]])
+            xScaler.fit(X_val_knef)
+            xTrSc1 = xScaler.transform(X_val_knef)
+            preds_KNEF = loaded_model_Martynovich_KNEF.predict(xTrSc1[0:1])
             out_KNEF = np.round(preds_KNEF, 4)
-            out_KNEF = (out_KNEF[0]-0.5)/0.5
-            # out_KNEF = out_KNEF*1/min(out_KNEF)
+            out_KNEF = out_KNEF[0]
 
         elif model is loaded_model_Martynovich_KNEF:
             x_test = np.array(x_test)
@@ -544,7 +568,7 @@ def preds_KPEF(model='', x_test=''):
     
     else:
         if model is loaded_model_suslin_KPEF:
-            st.write('*Модель 3 не может быть использована для классификации одной строки данных. Классификация будет проведена с использванием Модель 2.*')
+            st.write('*Модель 3 не может быть использована для классификации KPEF по одной строке данных. Классификация будет проведена с использванием Модель 2.*')
             model = loaded_model_shakhlin_KPEF
             
         if model is loaded_model_shakhlin_KPEF:
