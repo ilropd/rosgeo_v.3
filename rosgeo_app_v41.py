@@ -216,26 +216,26 @@ def load_models():
 
     # МОДЕЛИ РАСПОЗНАВАНИЯ КОЛЛЕКТОРОВ
     # модель Александра Солдатова
-#     with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/model_Soldatov_RF_Collectors_model_small.pkl') as url_soldatov:
-#         with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov:
-#             shutil.copyfileobj(url_soldatov, tmp_soldatov)
+    with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/model_Soldatov_RF_Collectors_model_small.pkl') as url_soldatov:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov:
+            shutil.copyfileobj(url_soldatov, tmp_soldatov)
 
-#     with open(tmp_soldatov.name, 'rb') as f_soldatov:
-#         loaded_model_soldatov_collectors = pickle.load(f_soldatov)
+    with open(tmp_soldatov.name, 'rb') as f_soldatov:
+        loaded_model_soldatov_collectors = pickle.load(f_soldatov)
     
-    with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/XGB_Soldatov_collectors_4_log10_joblib.pkl') as url_soldatov_4:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov_4:
-            shutil.copyfileobj(url_soldatov_4, tmp_soldatov_4)
+#     with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/XGB_Soldatov_collectors_4_log10_joblib.pkl') as url_soldatov_4:
+#         with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov_4:
+#             shutil.copyfileobj(url_soldatov_4, tmp_soldatov_4)
 
-    with open(tmp_soldatov_4.name, 'rb') as f_soldatov_4:
-        loaded_model_soldatov_collectors_4 = joblib.load(f_soldatov_4)
+#     with open(tmp_soldatov_4.name, 'rb') as f_soldatov_4:
+#         loaded_model_soldatov_collectors_4 = joblib.load(f_soldatov_4)
 
-    with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/XGB_Soldatov_collectors_80_log10_joblib.pkl') as url_soldatov_80:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov_80:
-            shutil.copyfileobj(url_soldatov_80, tmp_soldatov_80)
+#     with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/XGB_Soldatov_collectors_80_log10_joblib.pkl') as url_soldatov_80:
+#         with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov_80:
+#             shutil.copyfileobj(url_soldatov_80, tmp_soldatov_80)
 
-    with open(tmp_soldatov_80.name, 'rb') as f_soldatov_80:
-        loaded_model_soldatov_collectors_80 = joblib.load(f_soldatov_80)
+#     with open(tmp_soldatov_80.name, 'rb') as f_soldatov_80:
+#         loaded_model_soldatov_collectors_80 = joblib.load(f_soldatov_80)
     
     # модель Антона Кононова
     with urllib.request.urlopen('http://ilro.ru/Collectors/Kononov/BaggingClassifier_RG_kononov_collectors_model.pkl') as url_kononov:
@@ -352,19 +352,19 @@ result = st.button('Классифицировать')
 
 def integration_coll(model1=loaded_model_bagurin_collectors,
                      model2=loaded_model_kargaltsev_collectors,
-#                      model3=loaded_model_soldatov_collectors,
+                     model3=loaded_model_soldatov_collectors,
                      x_test=predict_collectors):
 
     out_1, out_noargmax_1 = preds_argmax_collectors(model=model1, x_test=x_test)
     out_2, out_noargmax_2 = preds_argmax_collectors(model=model2, x_test=x_test)
-#     out_3, out_noargmax_3 = preds_argmax_collectors(model=model3, x_test=x_test)
+    out_3, out_noargmax_3 = preds_argmax_collectors(model=model3, x_test=x_test)
 
     out_noargmax_1 = out_noargmax_1*0.93
     out_noargmax_2 = out_noargmax_2*0.939
-#     out_noargmax_3 = out_noargmax_3*0.9159
+    out_noargmax_3 = out_noargmax_3*0.9159
 
-    out_collectors_noargmax = out_noargmax_1 + out_noargmax_2
-#     out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_3
+#     out_collectors_noargmax = out_noargmax_1 + out_noargmax_2
+    out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_3
     out_collectors_noargmax = np.array(out_collectors_noargmax)
 
     out_collector = np.argmax(out_collectors_noargmax, axis=1)
@@ -422,30 +422,30 @@ def preds_argmax_collectors(model='', x_test=''):
             out_collectors = np.concatenate([preds_20_out, out_collectors], axis=0)
             out_collectors = pd.DataFrame(out_collectors)
         
-        if model is loaded_model_soldatov_collectors_4:
-            x_test = get_log_data(db=x_test, columns=cols_collectors)
+#         if model is loaded_model_soldatov_collectors_4:
+#             x_test = get_log_data(db=x_test, columns=cols_collectors)
 
-            preds_collectors_4 = loaded_model_soldatov_collectors_4.predict(x_test)
-            preds_collectors_4 = [round(value) for value in preds_collectors_4]
+#             preds_collectors_4 = loaded_model_soldatov_collectors_4.predict(x_test)
+#             preds_collectors_4 = [round(value) for value in preds_collectors_4]
 
-            preds_collectors_80 = loaded_model_soldatov_collectors_80.predict(x_test)
-            preds_collectors_80 = [round(value) for value in preds_collectors_80]
+#             preds_collectors_80 = loaded_model_soldatov_collectors_80.predict(x_test)
+#             preds_collectors_80 = [round(value) for value in preds_collectors_80]
 
-            preds = pd.DataFrame(preds_collectors_4, columns='Coll_4')
-            preds['Coll_80'] = preds_collectors_80
+#             preds = pd.DataFrame(preds_collectors_4, columns='Coll_4')
+#             preds['Coll_80'] = preds_collectors_80
 
-            pred_coll = []
+#             pred_coll = []
 
-            for i in preds:
-                if (i[0] == 1) and (i[1] == 0):
-                    pred_coll.append(4)
-                elif (i[0] == 0) and (i[1] == 1):
-                    pred_coll.append(80)
-                else:
-                    pred_coll.append(2)
+#             for i in preds:
+#                 if (i[0] == 1) and (i[1] == 0):
+#                     pred_coll.append(4)
+#                 elif (i[0] == 0) and (i[1] == 1):
+#                     pred_coll.append(80)
+#                 else:
+#                     pred_coll.append(2)
 
-            out_collectors = pd.DataFrame(pred_coll)
-            preds_collectors_noargmax = [0]
+#             out_collectors = pd.DataFrame(pred_coll)
+#             preds_collectors_noargmax = [0]
             
         else:
             preds_collectors = model.predict(x_test)
@@ -650,7 +650,7 @@ if result:
 
     def out_cols():
         if collectors_radio == 'модель 4 (Солдатов)':
-            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors_4, x_test=predict_collectors)
+            out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 1 (Багурин)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 2 (Каргальцев)':
@@ -662,14 +662,14 @@ if result:
         elif collectors_radio == 'интеграционная модель':
             out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
             out_2, out_noargmax_2 = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
-#             out_4, out_noargmax_4 = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
+            out_4, out_noargmax_4 = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
 
             out_noargmax_1 = out_noargmax_1*0.93
             out_noargmax_2 = out_noargmax_2*0.939
-#             out_noargmax_4 = out_noargmax_4*0.9159
+            out_noargmax_4 = out_noargmax_4*0.9159
             
             out_collectors_noargmax = out_noargmax_1 + out_noargmax_2
-#             out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_4
+            out_collectors_noargmax = out_noargmax_1 + out_noargmax_2 + out_noargmax_4
 
             out_collector = np.argmax(out_collectors_noargmax, axis=1)
 
