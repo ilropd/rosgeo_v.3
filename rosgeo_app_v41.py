@@ -332,21 +332,21 @@ def load_models():
     loaded_model_KPEF.load_weights('Models/KPEF/KPEF_baseline_weights.h5')
     print('Loaded model KPEF from disk')
     
-    return loaded_model_soldatov_collectors_4, loaded_model_soldatov_collectors_80, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
-           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
-           loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF
-
-loaded_model_soldatov_collectors_4, loaded_model_soldatov_collectors_80, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
-loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
-loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF = load_models()
-
-#     return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
+#     return loaded_model_soldatov_collectors_4, loaded_model_soldatov_collectors_80, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
 #            loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
 #            loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF
 
-# loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
+# loaded_model_soldatov_collectors_4, loaded_model_soldatov_collectors_80, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
 # loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
 # loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF = load_models()
+
+    return loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
+           loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+           loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF
+
+loaded_model_soldatov_collectors, loaded_model_bagurin_collectors, loaded_model_kargaltsev_collectors, loaded_model_suslin_collectors, \
+loaded_model_kononov_collectors, loaded_model_KNEF, loaded_model_Martynovich_KNEF, loaded_model_Novikov_KNEF, loaded_model_KPEF, \
+loaded_model_shakhlin_KPEF, loaded_model_suslin_KPEF = load_models()
 
 result = st.button('Классифицировать')
 
