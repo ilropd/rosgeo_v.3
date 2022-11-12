@@ -7,6 +7,7 @@ import urllib.request
 import tempfile
 import shutil
 import pickle
+import joblib
 from keras.utils.data_utils import get_file
 from keras.models import model_from_json
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -227,14 +228,14 @@ def load_models():
             shutil.copyfileobj(url_soldatov_4, tmp_soldatov_4)
 
     with open(tmp_soldatov_4.name, 'rb') as f_soldatov_4:
-        loaded_model_soldatov_collectors_4 = pickle.load(f_soldatov_4)
+        loaded_model_soldatov_collectors_4 = joblib.load(f_soldatov_4)
 
     with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/XGB_Soldatov_collectors_80_log10_joblib.pkl') as url_soldatov_80:
         with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov_80:
             shutil.copyfileobj(url_soldatov_80, tmp_soldatov_80)
 
     with open(tmp_soldatov_80.name, 'rb') as f_soldatov_80:
-        loaded_model_soldatov_collectors_80 = pickle.load(f_soldatov_80)
+        loaded_model_soldatov_collectors_80 = joblib.load(f_soldatov_80)
     
     # модель Антона Кононова
     with urllib.request.urlopen('http://ilro.ru/Collectors/Kononov/BaggingClassifier_RG_kononov_collectors_model.pkl') as url_kononov:
