@@ -228,14 +228,14 @@ def load_models():
             shutil.copyfileobj(url_soldatov_4, tmp_soldatov_4)
 
     with open(tmp_soldatov_4.name, 'rb') as f_soldatov_4:
-        loaded_model_soldatov_collectors_4 = pickle.load(f_soldatov_4)
+        loaded_model_soldatov_collectors_4 = joblib.load(f_soldatov_4)
 
     with urllib.request.urlopen('http://ilro.ru/Collectors/Soldatov/XGB_Soldatov_collectors_80_log10_joblib.pkl') as url_soldatov_80:
         with tempfile.NamedTemporaryFile(delete=False) as tmp_soldatov_80:
             shutil.copyfileobj(url_soldatov_80, tmp_soldatov_80)
 
     with open(tmp_soldatov_80.name, 'rb') as f_soldatov_80:
-        loaded_model_soldatov_collectors_80 = pickle.load(f_soldatov_80)
+        loaded_model_soldatov_collectors_80 = joblib.load(f_soldatov_80)
     
     # модель Антона Кононова
     with urllib.request.urlopen('http://ilro.ru/Collectors/Kononov/BaggingClassifier_RG_kononov_collectors_model.pkl') as url_kononov:
@@ -423,7 +423,7 @@ def preds_argmax_collectors(model='', x_test=''):
             out_collectors = pd.DataFrame(out_collectors)
         
         if model is loaded_model_soldatov_collectors_4:
-            x_test = get_log_data(x_test,columns=cols_collectors)
+            x_test = get_log_data(db=x_test, columns=cols_collectors)
 
             preds_collectors_4 = loaded_model_soldatov_collectors_4.predict(x_test)
             preds_collectors_4 = [round(value) for value in preds_collectors_4]
