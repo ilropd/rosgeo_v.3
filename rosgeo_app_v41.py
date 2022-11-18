@@ -57,7 +57,7 @@ st.sidebar.subheader('Прогнозирование типа коллектор
 # модель 3 - Кононов А.
 # модель 4 - Солдатов А.
 # интеграционная модель - объединяет в себе модели 1,2 и 4; 3 модель исключена, так как нет argmax
-collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1 (Багурин)', 'модель 2 (Каргальцев)', 'модель 3 (Кононов)', 'модель 4 (Солдатов)', 'модель 5 (Суслин)', 'интеграционная модель'))
+collectors_radio = st.sidebar.radio('Модели Коллекторов', ('модель 1 (Багурин)*', 'модель 2 (Каргальцев)*', 'модель 3 (Кононов)', 'модель 4 (Солдатов)', 'модель 5 (Суслин)*', 'интеграционная модель*'))
 st.sidebar.write('---')
 
 # выбор моделей KNEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -67,7 +67,7 @@ st.sidebar.subheader('Прогнозирование KNEF')
 # модель 2 - Новиков А. (ilro)
 # модель 3 - Новиков А.
 # модель 4 - Шахлин В.
-knef_radio = st.sidebar.radio('Модели KNEF', ('модель 1 (Мартынович)', 'модель 2 (noname)', 'модель 3 (Новиков)', 'модель 4 (Шахлин)'))
+knef_radio = st.sidebar.radio('Модели KNEF', ('модель 1 (Мартынович)*', 'модель 2 (noname)', 'модель 3 (Новиков)', 'модель 4 (Шахлин)*'))
 st.sidebar.write('---')
 
 # выбор моделей KPEF делаем радиокнопками, так как предсказание будет осуществляться только по одной модели, в отличие
@@ -76,7 +76,7 @@ st.sidebar.subheader('Прогнозирование KPEF')
 # модель 1 - Фадеев Ю.
 # модель 2 - Шахлин В.
 # модель 3 - Суслин Г.
-kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('модель 1 (Фадеев)', 'модель 2 (Шахлин)', 'модель 3 (Суслин)'))
+kpef_radio = st.sidebar.radio('Выберите одну из моделей', ('модель 1 (Фадеев)', 'модель 2 (Шахлин)*', 'модель 3 (Суслин)*'))
 
 # основной блок с выводом информации
 st.title('ПРОГНОЗИРОВАНИЕ ГЕОДАННЫХ')
@@ -651,15 +651,15 @@ if result:
     def out_cols():
         if collectors_radio == 'модель 4 (Солдатов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'модель 1 (Багурин)':
+        elif collectors_radio == 'модель 1 (Багурин)*':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'модель 2 (Каргальцев)':
+        elif collectors_radio == 'модель 2 (Каргальцев)*':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
         elif collectors_radio == 'модель 3 (Кононов)':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_kononov_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'модель 5 (Суслин)':
+        elif collectors_radio == 'модель 5 (Суслин)*':
             out_collector, out_collectors_noargmax = preds_argmax_collectors(model=loaded_model_suslin_collectors, x_test=predict_collectors)
-        elif collectors_radio == 'интеграционная модель':
+        elif collectors_radio == 'интеграционная модель*':
             out_1, out_noargmax_1 = preds_argmax_collectors(model=loaded_model_bagurin_collectors, x_test=predict_collectors)
             out_2, out_noargmax_2 = preds_argmax_collectors(model=loaded_model_kargaltsev_collectors, x_test=predict_collectors)
             out_4, out_noargmax_4 = preds_argmax_collectors(model=loaded_model_soldatov_collectors, x_test=predict_collectors)
@@ -689,18 +689,18 @@ if result:
     if kpef_radio == 'модель 1 (Фадеев)':
         out_KPEF = preds_KPEF(model=loaded_model_KPEF, x_test=predict_collectors)
         # st.write(out_fadeev_KPEF)
-    elif kpef_radio == 'модель 2 (Шахлин)':
+    elif kpef_radio == 'модель 2 (Шахлин)*':
         out_KPEF = preds_KPEF(model=loaded_model_shakhlin_KPEF, x_test=predict_collectors)
-    elif kpef_radio == 'модель 3 (Суслин)':
+    elif kpef_radio == 'модель 3 (Суслин)*':
         out_KPEF = preds_KPEF(model=loaded_model_suslin_KPEF, x_test=predict_collectors)
 
-    if knef_radio == 'модель 1 (Мартынович)':
+    if knef_radio == 'модель 1 (Мартынович)*':
         out_KNEF = preds_KNEF(model=loaded_model_Martynovich_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
     elif knef_radio == 'модель 3 (Новиков)':
         out_KNEF = preds_KNEF(model=loaded_model_Novikov_KNEF, x_test=predict_KNEF, x_kpef=out_KPEF, x_col=out_collectors)
     elif knef_radio == 'модель 2 (noname)':
         out_KNEF = preds_KNEF(model=loaded_model_KNEF, x_test=predict_KNEF)
-    elif knef_radio == 'модель 4 (Шахлин)':
+    elif knef_radio == 'модель 4 (Шахлин)*':
         out_KNEF = preds_KNEF(model=loaded_model_shakhlin_knef, x_test=predict_collectors)
 
         # st.write(out_novikov_KNEF)
